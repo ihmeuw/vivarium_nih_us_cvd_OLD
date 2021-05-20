@@ -30,37 +30,64 @@ class __Population(NamedTuple):
 POPULATION = __Population()
 
 
-# TODO - sample key group used to identify keys in model
-# For more information see the tutorial:
-# https://vivarium-inputs.readthedocs.io/en/latest/tutorials/pulling_data.html#entity-measure-data
-class __SomeDisease(NamedTuple):
+class __IHD(NamedTuple):
+    CSMR = 'cause.ischemic_heart_disease.cause_specific_mortality_rate'
+    MI_ACUTE_PREV: str = 'cause.ihd_mi_acute.prevalence' 
+    MI_POST_PREV: str = 'cause.ihd_mi_post.prevalence' 
+    ANGINA_PREV: str = 'cause.ihd_mi_angina.prevalence'
 
-    # Keys that will be loaded into the artifact. must have a colon type declaration
-    SOME_DISEASE_PREVALENCE: TargetString = TargetString('cause.some_disease.prevalence')
-    SOME_DISEASE_INCIDENCE_RATE: TargetString = TargetString('cause.some_disease.incidence_rate')
-    SOME_DISEASE_REMISSION_RATE: TargetString = TargetString('cause.some_disease.remission_rate')
-    DISABILITY_WEIGHT: TargetString = TargetString('cause.some_disease.disability_weight')
-    EMR: TargetString = TargetString('cause.some_disease.excess_mortality_rate')
-    CSMR: TargetString = TargetString('cause.some_disease.cause_specific_mortality_rate')
-    RESTRICTIONS: TargetString = TargetString('cause.some_disease.restrictions')
+    MI_ACUTE_EMR: str = 'cause.ihd_mi_acute.excess_mortality_rate'
+    MI_POST_EMR: str = 'cause.ihd_mi_post.excess_mortality_rate'
+    ANGINA_EMR: str = 'cause.ihd_mi_angina.excess_mortality_rate'
 
-    # Useful keys not for the artifact - distinguished by not using the colon type declaration
-    RAW_DISEASE_PREVALENCE = TargetString('sequela.raw_disease.prevalence')
-    RAW_DISEASE_INCIDENCE_RATE = TargetString('sequela.raw_disease.incidence_rate')
+    MI_ACUTE_DW: str = 'cause.ihd_mi_acute.disability_weight'
+    MI_POST_DW: str = 'cause.ihd_mi_post.disability_weight'
+    ANGINA_DW: str = 'cause.ihd_mi_angina.disability_weight'
+
+    RESTRICTIONS: str = 'cause.ischemic_heart_disease.restrictions'
 
     @property
     def name(self):
-        return 'some_disease'
+        return 'ischemic_heart_disease'
 
     @property
     def log_name(self):
-        return 'some disease'
+        return 'ischemic heart disease'
 
 
-SOME_DISEASE = __SomeDisease()
+IHD = __IHD()
+
+
+class __IschemicStroke(NamedTuple):
+    CSMR: str = 'cause.ischemic_stroke.cause_specific_mortality_rate'
+
+    ACUTE_PREV: str = 'cause.ischemic_stroke_acute.prevalence' 
+    CHRONIC_PREV: str = 'cause.ischemic_stroke_chronic.prevalence' 
+
+    ACUTE_EMR: str = 'cause.ischemic_stroke_acute.excess_mortality_rate'
+    CHRONIC_EMR: str = 'cause.ischemic_stroke_chronic.excess_mortality_rate'
+
+    ACUTE_DW: str = 'cause.ischemic_stroke_acute.disability_weight'
+    CHRONIC_DW: str = 'cause.ischemic_stroke_chronic.disability_weight'
+
+    ACUTE_EMR: str = 'cause.ischemic_stroke_acute.excess_mortality_rate'
+    CHRONIC_EMR: str = 'cause.ischemic_stroke_chronic.excess_mortality_rate'
+
+    RESTRICTIONS: str = 'cause.ischemic_stroke.restrictions'
+
+    @property
+    def name(self):
+        return 'ischemic_stroke'
+
+    @property
+    def log_name(self):
+        return 'ischemic stroke'
+
+
+ISCHEMIC_STROKE = __IschemicStroke()
 
 MAKE_ARTIFACT_KEY_GROUPS = [
     POPULATION,
-    # TODO: list all key groups here
-    # SOME_DISEASE
+    IHD,
+    ISCHEMIC_STROKE,
 ]
