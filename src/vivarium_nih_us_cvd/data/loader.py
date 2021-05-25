@@ -15,13 +15,21 @@ for an example.
 import pandas as pd
 from typing import Tuple, List
 
-from gbd_mapping import causes, covariates, risk_factors, Sequela
+from gbd_mapping import causes, covariates, risk_factors, Sequela, ModelableEntity
 from vivarium.framework.artifact import EntityKey
 from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
 
 from vivarium_nih_us_cvd.constants import data_keys
+
+
+def get_measure_wrapped(entity: ModelableEntity, key: str, location: str) -> pd.DataFrame:
+    '''
+    All calls to get_measure() need to have the location dropped. For the time being,
+    simply use this function.
+    '''
+    return interface.get_measure(entity, key, location).droplevel('location')
 
 
 def get_data(lookup_key: str, location: str) -> pd.DataFrame:
@@ -52,6 +60,10 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.IHD.MI_POST_PREV: load_ihd_prevalence,
         data_keys.IHD.ANGINA_PREV: load_ihd_prevalence,
 
+        data_keys.IHD.MI_ACUTE_INCIDENCE: load_ihd_incidence,
+        data_keys.IHD.MI_POST_INCIDENCE: load_ihd_incidence,
+        data_keys.IHD.ANGINA_INCIDENCE: load_ihd_incidence,
+
         data_keys.IHD.MI_ACUTE_DW: load_ihd_disability_weight,
         data_keys.IHD.MI_POST_DW: load_ihd_disability_weight,
         data_keys.IHD.ANGINA_DW: load_ihd_disability_weight,
@@ -70,6 +82,7 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
 
         data_keys.ISCHEMIC_STROKE.ACUTE_EMR: load_ischemic_stroke_emr,
         data_keys.ISCHEMIC_STROKE.CHRONIC_EMR: load_ischemic_stroke_emr,
+        data_keys.ISCHEMIC_STROKE.ACUTE_INCIDENCE: load_standard_data,
         data_keys.ISCHEMIC_STROKE.CSMR: load_standard_data,
         data_keys.ISCHEMIC_STROKE.RESTRICTIONS: load_metadata,
     }
@@ -102,7 +115,7 @@ def load_theoretical_minimum_risk_life_expectancy(key: str, location: str) -> pd
 def load_standard_data(key: str, location: str) -> pd.DataFrame:
     key = EntityKey(key)
     entity = get_entity(key)
-    return interface.get_measure(entity, key.measure, location).droplevel('location')
+    return get_measure_wrapped(entity, key.measure, location)
 
 
 def load_metadata(key: str, location: str):
@@ -124,7 +137,7 @@ def _load_em_from_meid(meid: int, measure: str, location: str):
     data = vi_utils.scrub_gbd_conventions(data, location)
     data = vi_utils.split_interval(data, interval_column='age', split_column_prefix='age')
     data = vi_utils.split_interval(data, interval_column='year', split_column_prefix='year')
-    return vi_utils.sort_hierarchical_data(data)
+    return vi_utils.sort_hierarchical_data(data).droplevel('location')
 
 #
 # project-specific data functions here
@@ -132,8 +145,8 @@ def _load_em_from_meid(meid: int, measure: str, location: str):
 def get_prevalence_weighted_disability_weight(sequelae: List[Sequela], location: str) -> List[pd.DataFrame]:
     prevalence_disability_weights = []
     for s in sequelae:
-        prevalence = interface.get_measure(s, 'prevalence', location)
-        disability_weight = interface.get_measure(s, 'disability_weight', location)
+        prevalence = get_measure_wrapped(s, 'prevalence', location)
+        disability_weight = get_measure_wrapped(s, 'disability_weight', location)
         prevalence_disability_weights.append(prevalence * disability_weight)
     return prevalence_disability_weights
 
@@ -152,8 +165,19 @@ def load_ihd_prevalence(key: str, location: str) -> pd.DataFrame:
         data_keys.IHD.MI_POST_PREV: post_mi_sequelae,
         data_keys.IHD.ANGINA_PREV: angina_mi_sequelae,
     }
-    prevalence = sum(interface.get_measure(s, 'prevalence', location) for s in map[key])
+    prevalence = sum(get_measure_wrapped(s, 'prevalence', location) for s in map[key])
     return prevalence
+
+
+def load_ihd_incidence(key: str, location: str) -> pd.DataFrame:
+    map = {
+        data_keys.IHD.MI_ACUTE_INCIDENCE: 24694,
+        data_keys.IHD.MI_POST_INCIDENCE: 24694,
+        data_keys.IHD.ANGINA_INCIDENCE: 1817,
+    }
+    ihd_all = get_measure_wrapped(causes.ischemic_heart_disease, 'prevalence', location)
+    ihd_this = _load_em_from_meid(map[key], 'Incidence rate', location)
+    return ihd_this / (1 - ihd_all)
 
 
 def load_ihd_disability_weight(key: str, location: str) -> pd.DataFrame:
@@ -164,7 +188,7 @@ def load_ihd_disability_weight(key: str, location: str) -> pd.DataFrame:
         data_keys.IHD.ANGINA_DW: angina_mi_sequelae,
     }
     prevalence_disability_weights = get_prevalence_weighted_disability_weight(map[key], location)
-    ihd_prevalence = interface.get_measure(causes.ischemic_heart_disease, 'prevalence', location)
+    ihd_prevalence = get_measure_wrapped(causes.ischemic_heart_disease, 'prevalence', location)
     ihd_disability_weight = (sum(prevalence_disability_weights) / ihd_prevalence).fillna(0)
     return ihd_disability_weight
 
@@ -190,7 +214,7 @@ def load_ischemic_stroke_prevalence(key: str, location: str) -> pd.DataFrame:
         data_keys.ISCHEMIC_STROKE.ACUTE_PREV: acute_sequelae,
         data_keys.ISCHEMIC_STROKE.CHRONIC_PREV: chronic_sequelae
     }
-    prevalence = sum(interface.get_measure(s, 'prevalence', location) for s in map[key])
+    prevalence = sum(get_measure_wrapped(s, 'prevalence', location) for s in map[key])
     return prevalence
 
 
@@ -201,7 +225,7 @@ def load_ischemic_stroke_disability_weight(key: str, location: str) -> pd.DataFr
         data_keys.ISCHEMIC_STROKE.CHRONIC_DW: chronic_sequelae
     }
     prevalence_disability_weights = get_prevalence_weighted_disability_weight(map[key], location)
-    ischemic_stroke_prevalence = interface.get_measure(causes.ischemic_stroke, 'prevalence', location)
+    ischemic_stroke_prevalence = get_measure_wrapped(causes.ischemic_stroke, 'prevalence', location)
     ischemic_stroke_disability_weight = (sum(prevalence_disability_weights) / ischemic_stroke_prevalence).fillna(0)
     return ischemic_stroke_disability_weight
 
