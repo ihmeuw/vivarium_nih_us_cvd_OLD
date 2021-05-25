@@ -30,8 +30,8 @@ POPULATION = __Population()
 
 
 class __IHD(NamedTuple):
-    CSMR: str = 'cause.ischemic_heart_disease.cause_specific_mortality_rate'
-    RESTRICTIONS: str = 'cause.ischemic_heart_disease.restrictions'
+    CSMR: str = f'cause.{mod.IHD_MODEL_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS: str = f'cause.{mod.IHD_MODEL_NAME}.restrictions'
 
     MI_ACUTE_PREV: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.prevalence' 
     MI_POST_PREV: str = f'cause.{mod.POST_MI_STATE_NAME}.prevalence' 
@@ -51,19 +51,19 @@ class __IHD(NamedTuple):
 
     @property
     def name(self):
-        return 'ischemic_heart_disease'
+        return mod.IHD_MODEL_NAME
 
     @property
     def log_name(self):
-        return 'ischemic heart disease'
+        return mod.IHD_MODEL_NAME.replace('_', ' ')
 
 
 IHD = __IHD()
 
 
 class __IschemicStroke(NamedTuple):
-    CSMR: str = 'cause.ischemic_stroke.cause_specific_mortality_rate'
-    RESTRICTIONS: str = 'cause.ischemic_stroke.restrictions'
+    CSMR: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}restrictions'
     ACUTE_INCIDENCE: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.incidence_rate'
 
     ACUTE_PREV: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.prevalence' 
@@ -77,11 +77,11 @@ class __IschemicStroke(NamedTuple):
 
     @property
     def name(self):
-        return 'ischemic_stroke'
+        return {mod.ISCHEMIC_STROKE_MODEL_NAME}
 
     @property
     def log_name(self):
-        return 'ischemic stroke'
+        return {mod.ISCHEMIC_STROKE_MODEL_NAME}.replace('_', ' ')
 
 
 ISCHEMIC_STROKE = __IschemicStroke()

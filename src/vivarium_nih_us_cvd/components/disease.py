@@ -2,40 +2,14 @@ from datetime import date
 import typing
 
 import pandas as pd
-from vivarium_public_health.disease import (DiseaseState as DiseaseState_, DiseaseModel, SusceptibleState,
-                                            TransientDiseaseState, RateTransition as RateTransition_)
 
+from vivarium_public_health.disease import DiseaseState, DiseaseModel, SusceptibleState
 from vivarium_nih_us_cvd.constants import data_keys, models, models
 
 if typing.TYPE_CHECKING:
     from vivarium.framework.engine import Builder
     from vivarium.framework.population import SimulantData
     from vivarium.framework.event import Event
-
-
-class RateTransition(RateTransition_):
-    def load_transition_rate_data(self, builder):
-        if 'transition_rate' in self._get_data_functions:
-            rate_data = self._get_data_functions['transition_rate'](builder, self.input_state.cause,
-                                                                    self.output_state.cause)
-            pipeline_name = f'{self.input_state.cause}_to_{self.output_state.cause}.transition_rate'
-        else:
-            raise ValueError("No valid data functions supplied.")
-        return rate_data, pipeline_name
-
-
-class DiseaseState(DiseaseState_):
-
-    # I really need to rewrite the state machine code.  It's super inflexible
-    def add_transition(self, output, source_data_type=None, get_data_functions=None, **kwargs):
-        if source_data_type == 'rate':
-            if get_data_functions is None or 'transition_rate' not in get_data_functions:
-                raise ValueError('Must supply get data functions for transition_rate.')
-            t = RateTransition(self, output, get_data_functions, **kwargs)
-            self.transition_set.append(t)
-        else:
-            t = super().add_transition(output, source_data_type, get_data_functions, **kwargs)
-        return t
 
 
 def IschemicHeartDisease():
