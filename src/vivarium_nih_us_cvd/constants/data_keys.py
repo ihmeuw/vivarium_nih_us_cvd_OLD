@@ -1,7 +1,6 @@
 from typing import NamedTuple
 
-from vivarium_public_health.utilities import TargetString
-
+from vivarium_nih_us_cvd.constants import models as mod
 
 #############
 # Data Keys #
@@ -31,57 +30,58 @@ POPULATION = __Population()
 
 
 class __IHD(NamedTuple):
-    CSMR = 'cause.ischemic_heart_disease.cause_specific_mortality_rate'
-    MI_ACUTE_PREV: str = 'cause.ihd_mi_acute.prevalence' 
-    MI_POST_PREV: str = 'cause.ihd_mi_post.prevalence' 
-    ANGINA_PREV: str = 'cause.ihd_mi_angina.prevalence'
+    CSMR: str = f'cause.{mod.IHD_MODEL_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS: str = f'cause.{mod.IHD_MODEL_NAME}.restrictions'
 
-    MI_ACUTE_EMR: str = 'cause.ihd_mi_acute.excess_mortality_rate'
-    MI_POST_EMR: str = 'cause.ihd_mi_post.excess_mortality_rate'
-    ANGINA_EMR: str = 'cause.ihd_mi_angina.excess_mortality_rate'
+    MI_ACUTE_PREV: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.prevalence' 
+    MI_POST_PREV: str = f'cause.{mod.POST_MI_STATE_NAME}.prevalence' 
+    ANGINA_PREV: str = f'cause.{mod.ANGINA_STATE_NAME}.prevalence'
 
-    MI_ACUTE_DW: str = 'cause.ihd_mi_acute.disability_weight'
-    MI_POST_DW: str = 'cause.ihd_mi_post.disability_weight'
-    ANGINA_DW: str = 'cause.ihd_mi_angina.disability_weight'
+    MI_ACUTE_INCIDENCE: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.incidence' 
+    MI_POST_INCIDENCE: str = f'cause.{mod.POST_MI_STATE_NAME}.incidence' 
+    ANGINA_INCIDENCE: str = f'cause.{mod.ANGINA_STATE_NAME}.incidence'
 
-    RESTRICTIONS: str = 'cause.ischemic_heart_disease.restrictions'
+    MI_ACUTE_EMR: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.excess_mortality_rate'
+    MI_POST_EMR: str = f'cause.{mod.POST_MI_STATE_NAME}.excess_mortality_rate'
+    ANGINA_EMR: str = f'cause.{mod.ANGINA_STATE_NAME}.excess_mortality_rate'
+
+    MI_ACUTE_DW: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.disability_weight'
+    MI_POST_DW: str = f'cause.{mod.POST_MI_STATE_NAME}.disability_weight'
+    ANGINA_DW: str = f'cause.{mod.ANGINA_STATE_NAME}.disability_weight'
 
     @property
     def name(self):
-        return 'ischemic_heart_disease'
+        return mod.IHD_MODEL_NAME
 
     @property
     def log_name(self):
-        return 'ischemic heart disease'
+        return mod.IHD_MODEL_NAME.replace('_', ' ')
 
 
 IHD = __IHD()
 
 
 class __IschemicStroke(NamedTuple):
-    CSMR: str = 'cause.ischemic_stroke.cause_specific_mortality_rate'
+    CSMR: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}restrictions'
+    ACUTE_INCIDENCE: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.incidence_rate'
 
-    ACUTE_PREV: str = 'cause.ischemic_stroke_acute.prevalence' 
-    CHRONIC_PREV: str = 'cause.ischemic_stroke_chronic.prevalence' 
+    ACUTE_PREV: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.prevalence' 
+    CHRONIC_PREV: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.prevalence'
 
-    ACUTE_EMR: str = 'cause.ischemic_stroke_acute.excess_mortality_rate'
-    CHRONIC_EMR: str = 'cause.ischemic_stroke_chronic.excess_mortality_rate'
+    ACUTE_EMR: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.excess_mortality_rate'
+    CHRONIC_EMR: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.excess_mortality_rate'
 
-    ACUTE_DW: str = 'cause.ischemic_stroke_acute.disability_weight'
-    CHRONIC_DW: str = 'cause.ischemic_stroke_chronic.disability_weight'
-
-    ACUTE_EMR: str = 'cause.ischemic_stroke_acute.excess_mortality_rate'
-    CHRONIC_EMR: str = 'cause.ischemic_stroke_chronic.excess_mortality_rate'
-
-    RESTRICTIONS: str = 'cause.ischemic_stroke.restrictions'
+    ACUTE_DW: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.disability_weight'
+    CHRONIC_DW: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.disability_weight'
 
     @property
     def name(self):
-        return 'ischemic_stroke'
+        return {mod.ISCHEMIC_STROKE_MODEL_NAME}
 
     @property
     def log_name(self):
-        return 'ischemic stroke'
+        return {mod.ISCHEMIC_STROKE_MODEL_NAME}.replace('_', ' ')
 
 
 ISCHEMIC_STROKE = __IschemicStroke()

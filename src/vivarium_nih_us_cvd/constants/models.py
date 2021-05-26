@@ -1,6 +1,3 @@
-from vivarium_nih_us_cvd.constants import data_keys
-
-
 class TransitionString(str):
 
     def __new__(cls, value):
@@ -14,22 +11,38 @@ class TransitionString(str):
 # Disease Model variables #
 ###########################
 
-# TODO - not correct, simply modified so variables are defined
-IHD_MODEL_NAME = data_keys.IHD.name
-SUSCEPTIBLE_STATE_NAME = f'susceptible_to_{IHD_MODEL_NAME}'
-FIRST_STATE_NAME = 'first_state'
-SECOND_STATE_NAME = 'second_state'
-IHD_DISEASE_MODEL_STATES = (SUSCEPTIBLE_STATE_NAME, FIRST_STATE_NAME, SECOND_STATE_NAME)
-IHD_DISEASE_MODEL_TRANSITIONS = (
-    TransitionString(f'{SUSCEPTIBLE_STATE_NAME}_TO_{FIRST_STATE_NAME}'),
-    TransitionString(f'{FIRST_STATE_NAME}_TO_{SECOND_STATE_NAME}'),
-    TransitionString(f'{SECOND_STATE_NAME}_TO_{FIRST_STATE_NAME}')
+IHD_MODEL_NAME = 'ischemic_heart_disease'
+IHD_SUSCEPTIBLE_STATE_NAME = f'susceptible_to_{IHD_MODEL_NAME}'
+ACUTE_MI_STATE_NAME = 'acute_myocardial_infarction'
+POST_MI_STATE_NAME = 'post_myocardial_infarction'
+ANGINA_STATE_NAME = 'angina'
+IHD_MODEL_STATES = (IHD_SUSCEPTIBLE_STATE_NAME, ACUTE_MI_STATE_NAME, POST_MI_STATE_NAME, ANGINA_STATE_NAME)
+IHD_MODEL_TRANSITIONS = (
+    TransitionString(f'{IHD_SUSCEPTIBLE_STATE_NAME}_TO_{ACUTE_MI_STATE_NAME}'),
+    TransitionString(f'{ACUTE_MI_STATE_NAME}_TO_{POST_MI_STATE_NAME}'),
+    TransitionString(f'{POST_MI_STATE_NAME}_TO_{ACUTE_MI_STATE_NAME}'),
+    TransitionString(f'{IHD_SUSCEPTIBLE_STATE_NAME}_TO_{ANGINA_STATE_NAME}'),
+)
+
+ISCHEMIC_STROKE_MODEL_NAME = 'ischemic_stroke'
+ISCHEMIC_STROKE_SUSCEPTIBLE_STATE_NAME = f'susceptible_to_{ISCHEMIC_STROKE_MODEL_NAME}'
+ACUTE_ISCHEMIC_STROKE_STATE_NAME = 'acute_ischemic_stroke'
+CHRONIC_ISCHEMIC_STROKE_STATE_NAME = 'chronic_ischemic_stroke'
+ISCHEMIC_STROKE_MODEL_STATES = (
+    ISCHEMIC_STROKE_SUSCEPTIBLE_STATE_NAME,
+    ACUTE_ISCHEMIC_STROKE_STATE_NAME,
+    CHRONIC_ISCHEMIC_STROKE_STATE_NAME
+)
+ISCHEMIC_STROKE_MODEL_TRANSITIONS = (
+    TransitionString(f'{ISCHEMIC_STROKE_SUSCEPTIBLE_STATE_NAME}_TO_{ACUTE_ISCHEMIC_STROKE_STATE_NAME}'),
+    TransitionString(f'{ACUTE_ISCHEMIC_STROKE_STATE_NAME}_TO_{CHRONIC_ISCHEMIC_STROKE_STATE_NAME}'),
+    TransitionString(f'{CHRONIC_ISCHEMIC_STROKE_STATE_NAME}_TO_{ACUTE_ISCHEMIC_STROKE_STATE_NAME}')
 )
 
 STATE_MACHINE_MAP = {
     IHD_MODEL_NAME: {
-        'states': IHD_DISEASE_MODEL_STATES,
-        'transitions': IHD_DISEASE_MODEL_TRANSITIONS,
+        'states': IHD_MODEL_STATES,
+        'transitions': IHD_MODEL_TRANSITIONS,
     },
 }
 
