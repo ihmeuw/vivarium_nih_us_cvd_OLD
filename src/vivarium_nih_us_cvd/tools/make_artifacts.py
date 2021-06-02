@@ -18,6 +18,7 @@ from loguru import logger
 import vivarium_cluster_tools as vct
 
 from vivarium_nih_us_cvd.constants import data_keys, metadata
+from vivarium_nih_us_cvd.data.builder import handle_special_cases
 from vivarium_nih_us_cvd.utilities import sanitize_location, delete_if_exists, len_longest_location
 from vivarium_nih_us_cvd.tools.app_logging import add_logging_sink, decode_status
 
@@ -183,6 +184,8 @@ def build_single_location_artifact(path: Union[str, Path], location: str, log_to
         for key in key_group:
             logger.info(f'   - Loading and writing {key} data')
             builder.load_and_write_data(artifact, key, location)
+            
+    handle_special_cases(artifact)
 
     logger.info(f'**Done building -- {location}**')
 

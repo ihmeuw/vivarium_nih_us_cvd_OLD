@@ -32,14 +32,17 @@ POPULATION = __Population()
 class __IHD(NamedTuple):
     CSMR: str = f'cause.{mod.IHD_MODEL_NAME}.cause_specific_mortality_rate'
     RESTRICTIONS: str = f'cause.{mod.IHD_MODEL_NAME}.restrictions'
+    # Note non-colon construction
+    CSMR_ANGINA = f'cause.{mod.ANGINA_STATE_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS_ANGINA = f'cause.{mod.ANGINA_STATE_NAME}.restrictions'
 
     MI_ACUTE_PREV: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.prevalence' 
     MI_POST_PREV: str = f'cause.{mod.POST_MI_STATE_NAME}.prevalence' 
     ANGINA_PREV: str = f'cause.{mod.ANGINA_STATE_NAME}.prevalence'
 
-    MI_ACUTE_INCIDENCE: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.incidence' 
-    MI_POST_INCIDENCE: str = f'cause.{mod.POST_MI_STATE_NAME}.incidence' 
-    ANGINA_INCIDENCE: str = f'cause.{mod.ANGINA_STATE_NAME}.incidence'
+    MI_ACUTE_INCIDENCE: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.incidence_rate' 
+    MI_POST_INCIDENCE: str = f'cause.{mod.POST_MI_STATE_NAME}.incidence_rate' 
+    ANGINA_INCIDENCE: str = f'cause.{mod.ANGINA_STATE_NAME}.incidence_rate'
 
     MI_ACUTE_EMR: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.excess_mortality_rate'
     MI_POST_EMR: str = f'cause.{mod.POST_MI_STATE_NAME}.excess_mortality_rate'
@@ -63,7 +66,7 @@ IHD = __IHD()
 
 class __IschemicStroke(NamedTuple):
     CSMR: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.cause_specific_mortality_rate'
-    RESTRICTIONS: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}restrictions'
+    RESTRICTIONS: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.restrictions'
     ACUTE_INCIDENCE: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.incidence_rate'
 
     ACUTE_PREV: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.prevalence' 
@@ -77,11 +80,11 @@ class __IschemicStroke(NamedTuple):
 
     @property
     def name(self):
-        return {mod.ISCHEMIC_STROKE_MODEL_NAME}
+        return mod.ISCHEMIC_STROKE_MODEL_NAME
 
     @property
     def log_name(self):
-        return {mod.ISCHEMIC_STROKE_MODEL_NAME}.replace('_', ' ')
+        return mod.ISCHEMIC_STROKE_MODEL_NAME.replace('_', ' ')
 
 
 ISCHEMIC_STROKE = __IschemicStroke()
