@@ -1,6 +1,7 @@
 import itertools
 
 from vivarium_nih_us_cvd.constants import models
+from vivarium_nih_us_cvd.constants.data_keys import IHD, ISCHEMIC_STROKE
 
 #################################
 # Results columns and variables #
@@ -46,20 +47,34 @@ NON_COUNT_TEMPLATES = [
 
 POP_STATES = ('living', 'dead', 'tracked', 'untracked')
 SEXES = ('male', 'female')
-# TODO - add literals for years in the model
-YEARS = ()
-# TODO - add literals for ages in the model
-AGE_GROUPS = ()
-# TODO - add causes of death
-CAUSES_OF_DEATH = (
-    'other_causes',
-    # models.FIRST_STATE_NAME,
+YEARS = tuple(range(2022, 2027))
+AGE_GROUPS = (
+    '30_to_34',
+    '35_to_39',
+    '40_to_44',
+    '45_to_49',
+    '50_to_54',
+    '55_to_59',
+    '60_to_64',
+    '65_to_69',
+    '70_to_74',
+    '75_to_79',
+    '80_to_84',
+    '85_to_89',
+    '90_to_94',
+    '95_plus',
 )
-# TODO - add causes of disability
+
 CAUSES_OF_DISABILITY = (
-    # models.FIRST_STATE_NAME,
-    # models.SECOND_STATE_NAME,
+    models.ACUTE_MI_STATE_NAME,
+    models.POST_MI_STATE_NAME,
+    models.ANGINA_STATE_NAME,
+    models.ACUTE_ISCHEMIC_STROKE_STATE_NAME,
+    models.CHRONIC_ISCHEMIC_STROKE_STATE_NAME,
 )
+
+CAUSES_OF_DEATH = CAUSES_OF_DISABILITY + ('other_causes',)
+
 
 TEMPLATE_FIELD_MAP = {
     'POP_STATE': POP_STATES,

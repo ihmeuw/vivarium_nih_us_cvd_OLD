@@ -1,0 +1,69 @@
+components:
+    vivarium_public_health:
+        population:
+            - BasePopulation()
+            - Mortality()
+        disease:
+            - SI("angina")
+        metrics:
+            - DisabilityObserver()
+            - MortalityObserver()
+            - DiseaseObserver("ischemic_heart_disease")
+            - DiseaseObserver("ischemic_stroke")
+            - DiseaseObserver("angina")
+            
+    vivarium_nih_us_cvd.components:
+        - IschemicHeartDisease()
+        - IschemicStroke()
+
+configuration:
+    input_data:
+        input_draw_number: 0
+        location: 'Alabama'
+        artifact_path: '/ihme/costeffectiveness/artifacts/vivarium_nih_us_cvd/alabama.hdf'
+    interpolation:
+        order: 0
+        extrapolate: True
+    randomness:
+        map_size: 1_000_000
+        key_columns: ['entrance_time', 'age']
+        random_seed: 0
+    time:
+        start:
+            year: 2022
+            month: 1
+            day: 1
+        end:
+            year: 2026
+            month: 12
+            day: 31
+        step_size: 1 # Days
+    population:
+        population_size: 10000
+        age_start: 0
+        age_end: 125
+
+    screening_algorithm:
+        scenario: 'baseline'
+
+    metrics:
+        mortality:
+            by_age: True
+            by_sex: True
+            by_year: True
+        disability:
+            by_age: True
+            by_sex: True
+            by_year: True
+        ischemic_heart_disease_observer:
+            by_age: True
+            by_sex: True
+            by_year: True
+        ischemic_stroke_observer:
+            by_age: True
+            by_sex: True
+            by_year: True
+        angina_observer:
+            by_age: True
+            by_sex: True
+            by_year: True
