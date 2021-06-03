@@ -44,6 +44,10 @@ STATE_MACHINE_MAP = {
         'states': IHD_MODEL_STATES,
         'transitions': IHD_MODEL_TRANSITIONS,
     },
+    ISCHEMIC_STROKE_MODEL_NAME: {
+        'states': ISCHEMIC_STROKE_MODEL_STATES,
+        'transitions': ISCHEMIC_STROKE_MODEL_TRANSITIONS,
+    },
 }
 
 

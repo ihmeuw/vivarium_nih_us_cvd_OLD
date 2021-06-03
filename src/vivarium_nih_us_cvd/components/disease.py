@@ -17,15 +17,12 @@ def IschemicHeartDisease():
     data_funcs = {'dwell_time': lambda *args: pd.Timedelta(days=28)}
     acute_mi = DiseaseState(models.ACUTE_MI_STATE_NAME, cause_type='cause', get_data_functions=data_funcs)
     post_mi = DiseaseState(models.POST_MI_STATE_NAME, cause_type='cause',)
-    angina_mi = DiseaseState(models.ANGINA_STATE_NAME, cause_type='cause',)
 
     susceptible.allow_self_transitions()
     data_funcs = {
         'incidence_rate': lambda _, builder: builder.data.load(data_keys.IHD.MI_ACUTE_INCIDENCE),
-        'incidence_rate_angina': lambda _, builder: builder.data.load(data_keys.IHD.ANGINA_INCIDENCE)
     }
     susceptible.add_transition(acute_mi, source_data_type='rate', get_data_functions=data_funcs)
-    susceptible.add_transition(angina_mi, source_data_type='rate', get_data_functions=data_funcs)
     acute_mi.allow_self_transitions()
     acute_mi.add_transition(post_mi)
     post_mi.allow_self_transitions()
@@ -34,7 +31,7 @@ def IschemicHeartDisease():
     }
     post_mi.add_transition(acute_mi, source_data_type='rate', get_data_functions=data_funcs)
 
-    return DiseaseModel(models.IHD_MODEL_NAME, states=[susceptible, acute_mi, post_mi, angina_mi])
+    return DiseaseModel(models.IHD_MODEL_NAME, states=[susceptible, acute_mi, post_mi])
 
 
 def IschemicStroke():

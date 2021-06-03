@@ -17,6 +17,7 @@ from typing import Tuple, List
 
 from gbd_mapping import causes, covariates, risk_factors, Sequela, ModelableEntity
 from vivarium.framework.artifact import EntityKey
+from vivarium.framework.artifact.artifact import Artifact
 from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
@@ -175,9 +176,10 @@ def load_ihd_incidence(key: str, location: str) -> pd.DataFrame:
         data_keys.IHD.MI_POST_INCIDENCE: 24694,
         data_keys.IHD.ANGINA_INCIDENCE: 1817,
     }
-    ihd_all = get_measure_wrapped(causes.ischemic_heart_disease, 'prevalence', location)
+    #ihd_all = get_measure_wrapped(causes.ischemic_heart_disease, 'prevalence', location)
+    ihd_prev_this = _load_em_from_meid(map[key], 'Prevalence', location)
     ihd_this = _load_em_from_meid(map[key], 'Incidence rate', location)
-    return ihd_this / (1 - ihd_all)
+    return ihd_this / (1 - ihd_prev_this)
 
 
 def load_ihd_disability_weight(key: str, location: str) -> pd.DataFrame:
@@ -203,8 +205,8 @@ def load_ihd_emr(key: str, location: str) -> pd.DataFrame:
 
 
 def get_ischemic_stroke_sequelae() ->  Tuple[pd.DataFrame, pd.DataFrame]:
-    acute_sequelae = [s for s in causes.ischemic_stroke.sequelae if 'acute' in s]
-    chronic_sequelae = [s for s in causes.ischemic_stroke.sequelae if 'chronic' in s]
+    acute_sequelae = [s for s in causes.ischemic_stroke.sequelae if 'acute' in s.name]
+    chronic_sequelae = [s for s in causes.ischemic_stroke.sequelae if 'chronic' in s.name]
     return acute_sequelae, chronic_sequelae
 
 
@@ -237,6 +239,10 @@ def load_ischemic_stroke_emr(key: str, location: str) -> pd.DataFrame:
     }
     return _load_em_from_meid(map[key], 'Excess mortality rate', location)
 
+
+def handle_special_cases(artifact: Artifact):
+    artifact.write(data_keys.IHD.RESTRICTIONS_ANGINA, artifact.load(data_keys.IHD.RESTRICTIONS))
+    artifact.write(data_keys.IHD.CSMR_ANGINA, artifact.load(data_keys.IHD.ANGINA_EMR))
 
 
 def get_entity(key: str):
