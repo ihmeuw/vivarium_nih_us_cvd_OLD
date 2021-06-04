@@ -117,5 +117,5 @@ def write_data_by_draw(artifact: Artifact, key: str, data: pd.DataFrame):
             store.put(f'{key.path}/{c}', data[c])
 
 
-def handle_special_cases(artifact: Artifact):
-    loader.handle_special_cases(artifact)
+def handle_special_cases(artifact: Artifact, location: str):
+    loader.handle_special_cases(artifact, location)
