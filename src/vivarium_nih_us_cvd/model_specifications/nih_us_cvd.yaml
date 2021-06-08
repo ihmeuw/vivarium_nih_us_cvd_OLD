@@ -30,17 +30,17 @@ configuration:
         random_seed: 0
     time:
         start:
-            year: 2022
-            month: 1
+            year: 2021
+            month: 2
             day: 1
         end:
-            year: 2026
-            month: 12
-            day: 31
-        step_size: 1 # Days
+            year: 2040
+            month: 11
+            day: 30
+        step_size: 30 # Days
     population:
-        population_size: 10000
-        age_start: 0
+        population_size: 100_000
+        age_start: 25
         age_end: 125
 
     screening_algorithm:
