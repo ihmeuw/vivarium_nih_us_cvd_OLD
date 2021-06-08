@@ -185,7 +185,7 @@ def build_single_location_artifact(path: Union[str, Path], location: str, log_to
             logger.info(f'   - Loading and writing {key} data')
             builder.load_and_write_data(artifact, key, location)
             
-    handle_special_cases(artifact)
+    handle_special_cases(artifact, location)
 
     logger.info(f'**Done building -- {location}**')
 

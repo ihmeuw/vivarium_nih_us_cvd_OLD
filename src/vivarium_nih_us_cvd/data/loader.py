@@ -197,8 +197,8 @@ def load_ihd_disability_weight(key: str, location: str) -> pd.DataFrame:
 
 def load_ihd_emr(key: str, location: str) -> pd.DataFrame:
     map = {
-        data_keys.IHD.MI_ACUTE_EMR: 15755,
-        data_keys.IHD.MI_POST_EMR: 24694,
+        data_keys.IHD.MI_ACUTE_EMR: 24694,
+        data_keys.IHD.MI_POST_EMR: 15755,
         data_keys.IHD.ANGINA_EMR: 1817,
     }
     return _load_em_from_meid(map[key], 'Excess mortality rate', location)
@@ -240,9 +240,16 @@ def load_ischemic_stroke_emr(key: str, location: str) -> pd.DataFrame:
     return _load_em_from_meid(map[key], 'Excess mortality rate', location)
 
 
-def handle_special_cases(artifact: Artifact):
+def handle_special_cases(artifact: Artifact, location: str):
     artifact.write(data_keys.IHD.RESTRICTIONS_ANGINA, artifact.load(data_keys.IHD.RESTRICTIONS))
-    artifact.write(data_keys.IHD.CSMR_ANGINA, artifact.load(data_keys.IHD.ANGINA_EMR))
+    # Maybe use later... For now use IHD cause_specific_mortality, which contains angina emr,
+    #   and make angina csmr be zero. The csmr is necessary to use the default SI model for angina
+    # csmr_angina = (load_ihd_prevalence(data_keys.IHD.ANGINA_PREV, location)
+    #               * load_ihd_emr(data_keys.IHD.ANGINA_EMR, location))
+    draws = [f'draw_{i}' for i in range(1000)]
+    df_zeros = load_ihd_emr(data_keys.IHD.ANGINA_EMR, location)
+    df_zeros[draws] = 0.0
+    artifact.write(data_keys.IHD.CSMR_ANGINA, df_zeros)
 
 
 def get_entity(key: str):

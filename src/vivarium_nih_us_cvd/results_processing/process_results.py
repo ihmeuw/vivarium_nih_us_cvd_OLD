@@ -31,8 +31,8 @@ def make_measure_data(data):
         ylds=get_by_cause_measure_data(data, 'ylds'),
         deaths=get_by_cause_measure_data(data, 'deaths'),
         # TODO duplicate for each model
-        disease_state_person_time=get_state_person_time_measure_data(data, 'disease_state_person_time'),
-        disease_transition_count=get_transition_count_measure_data(data, 'disease_transition_count'),
+        disease_state_person_time=get_state_person_time_measure_data(data),
+        disease_transition_count=get_transition_count_measure_data(data),
     )
     return measure_data
 
@@ -122,7 +122,7 @@ def sort_data(data):
 
 def split_processing_column(data):
     # TODO the required splitting here is dependant on what types of stratification exist in the model
-    data['process'], data['age'] = data.process.str.split('_age').str
+    data['process'], data['age'] = data.process.str.split('_in_age_group_').str
     data['process'], data['sex'] = data.process.str.split('_among_').str
     data['year'] = data.process.str.split('_in_').str[-1]
     data['measure'] = data.process.str.split('_in_').str[:-1].apply(lambda x: '_in_'.join(x))
@@ -149,14 +149,12 @@ def get_by_cause_measure_data(data, measure):
     return sort_data(data)
 
 
-def get_state_person_time_measure_data(data, measure):
-    data = get_measure_data(data, measure)
+def get_state_person_time_measure_data(data):
+    data = get_measure_data(data, 'state_person_time')
     data['measure'], data['cause'] = 'state_person_time', data.measure.str.split('_person_time').str[0]
     return sort_data(data)
 
 
-def get_transition_count_measure_data(data, measure):
-    # Oops, edge case.
-    data = data.drop(columns=[c for c in data.columns if 'event_count' in c and '2041' in c])
-    data = get_measure_data(data, measure)
+def get_transition_count_measure_data(data):
+    data = get_measure_data(data, 'transition_count')
     return sort_data(data)
