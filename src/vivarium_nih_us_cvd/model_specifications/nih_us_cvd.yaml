@@ -22,6 +22,8 @@ components:
     vivarium_nih_us_cvd.components:
         - IschemicHeartDisease()
         - IschemicStroke()
+        - DiseaseObserver("ischemic_heart_disease")
+        - DiseaseObserver("ischemic_stroke")
 
 configuration:
     input_data:
