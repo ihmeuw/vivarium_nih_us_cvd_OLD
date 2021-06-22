@@ -5,6 +5,13 @@ components:
             - Mortality()
         disease:
             - SI("angina")
+        risks:
+            - Risk('risk_factor.high_ldl_cholesterol')
+            - RiskEffect('risk_factor.high_ldl_cholesterol', 'cause.ischemic_heart_disease.incidence_rate')
+            - RiskEffect('risk_factor.high_ldl_cholesterol', 'cause.ischemic_stroke.incidence_rate')
+            - Risk('risk_factor.high_systolic_blood_pressure')
+            - RiskEffect('risk_factor.high_systolic_blood_pressure', 'cause.ischemic_heart_disease.incidence_rate')
+            - RiskEffect('risk_factor.high_systolic_blood_pressure', 'cause.ischemic_stroke.incidence_rate')
         metrics:
             - DisabilityObserver()
             - MortalityObserver()
@@ -15,6 +22,8 @@ components:
     vivarium_nih_us_cvd.components:
         - IschemicHeartDisease()
         - IschemicStroke()
+        - DiseaseObserver("ischemic_heart_disease")
+        - DiseaseObserver("ischemic_stroke")
 
 configuration:
     input_data:

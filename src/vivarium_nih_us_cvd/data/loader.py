@@ -86,6 +86,25 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.ISCHEMIC_STROKE.ACUTE_INCIDENCE: load_standard_data,
         data_keys.ISCHEMIC_STROKE.CSMR: load_standard_data,
         data_keys.ISCHEMIC_STROKE.RESTRICTIONS: load_metadata,
+
+        data_keys.LDL_C.DISTRIBUTION: load_metadata,
+        data_keys.LDL_C.EXPOSURE_MEAN: load_standard_data,
+        data_keys.LDL_C.EXPOSURE_SD: load_standard_data,
+        data_keys.LDL_C.EXPOSURE_WEIGHTS: load_standard_data,
+        #data_keys.LDL_C.HIGH_RISK_THRESHOLD: load_high_risk_ldl_threshold,
+        data_keys.LDL_C.RELATIVE_RISK: load_standard_data,
+        data_keys.LDL_C.PAF: load_standard_data,
+        data_keys.LDL_C.TMRED: load_metadata,
+        data_keys.LDL_C.RELATIVE_RISK_SCALAR: load_metadata,
+
+        data_keys.SBP.DISTRIBUTION: load_metadata,
+        data_keys.SBP.EXPOSURE_MEAN: load_standard_data,
+        data_keys.SBP.EXPOSURE_SD: load_standard_data,
+        data_keys.SBP.EXPOSURE_WEIGHTS: load_standard_data,
+        data_keys.SBP.RELATIVE_RISK: load_standard_data,
+        data_keys.SBP.PAF: load_standard_data,
+        data_keys.SBP.TMRED: load_metadata,
+        data_keys.SBP.RELATIVE_RISK_SCALAR: load_metadata,
     }
     return mapping[lookup_key](lookup_key, location)
 
@@ -238,6 +257,15 @@ def load_ischemic_stroke_emr(key: str, location: str) -> pd.DataFrame:
         data_keys.ISCHEMIC_STROKE.CHRONIC_EMR: 10837,
     }
     return _load_em_from_meid(map[key], 'Excess mortality rate', location)
+
+
+def load_high_risk_ldl_threshold(key: str, location: str) -> pd.DataFrame:
+    pass
+    # TODO:
+    # data_path = paths.LDL_C_THRESHOLD_DIR / f'{sanitize_location(location)}.hdf'
+    # ldl_exposure = pd.read_hdf(data_path)
+    # return ldl_exposure
+
 
 
 def handle_special_cases(artifact: Artifact, location: str):
