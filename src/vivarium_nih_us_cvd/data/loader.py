@@ -22,7 +22,7 @@ from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
 
-from vivarium_nih_us_cvd.constants import data_keys
+from vivarium_nih_us_cvd.constants import data_keys, models
 
 
 def get_measure_wrapped(entity: ModelableEntity, key: str, location: str) -> pd.DataFrame:
@@ -278,6 +278,28 @@ def handle_special_cases(artifact: Artifact, location: str):
     df_zeros = load_ihd_emr(data_keys.IHD.ANGINA_EMR, location)
     df_zeros[draws] = 0.0
     artifact.write(data_keys.IHD.CSMR_ANGINA, df_zeros)
+
+
+    # Need to make RR data match causes in the model
+    df_rr_ldlc = artifact.load(data_keys.LDL_C.RELATIVE_RISK)
+    df_rr_ldlc = df_rr_ldlc.rename(index={'ischemic_stroke': 'acute_ischemic_stroke'})
+    df_rr_ldlc = df_rr_ldlc.rename(index={'ischemic_heart_disease': 'acute_myocardial_infarction'})
+    artifact.replace(data_keys.LDL_C.RELATIVE_RISK, df_rr_ldlc)
+
+    df_paf_ldlc = artifact.load(data_keys.LDL_C.PAF)
+    df_paf_ldlc = df_paf_ldlc.rename(index={'ischemic_stroke': 'acute_ischemic_stroke'})
+    df_paf_ldlc = df_paf_ldlc.rename(index={'ischemic_heart_disease': 'acute_myocardial_infarction'})
+    artifact.replace(data_keys.LDL_C.PAF, df_paf_ldlc)
+    
+    df_rr_sbp = artifact.load(data_keys.SBP.RELATIVE_RISK)
+    df_rr_sbp = df_rr_sbp.rename(index={'ischemic_stroke': 'acute_ischemic_stroke'})
+    df_rr_sbp = df_rr_sbp.rename(index={'ischemic_heart_disease': 'acute_myocardial_infarction'})
+    artifact.replace(data_keys.SBP.RELATIVE_RISK, df_rr_sbp)
+    
+    df_paf_sbp = artifact.load(data_keys.SBP.PAF)
+    df_paf_sbp = df_paf_sbp.rename(index={'ischemic_stroke': 'acute_ischemic_stroke'})
+    df_paf_sbp = df_paf_sbp.rename(index={'ischemic_heart_disease': 'acute_myocardial_infarction'})
+    artifact.replace(data_keys.SBP.PAF, df_paf_sbp)
 
 
 def get_entity(key: str):

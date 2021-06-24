@@ -57,8 +57,8 @@ class ResultsStratifier:
                 | (pop[models.ISCHEMIC_STROKE_MODEL_NAME]
                    != models.ISCHEMIC_STROKE_SUSCEPTIBLE_STATE_NAME)
         )
-        high_sbp = sbp > 140
-        high_ldlc = ldlc > 5
+        high_sbp = sbp > data_values.THRESHOLD_HIGH_SBP
+        high_ldlc = ldlc > data_values.THRESHOLD_HIGH_LDLC
 
         risk_groups.loc[high_sbp & high_ldlc & post_acs] = data_values.RISK_GROUPS.SBP_high_LDL_high_ACS_post
         risk_groups.loc[high_sbp & high_ldlc & ~post_acs] = data_values.RISK_GROUPS.SBP_high_LDL_high_ACS_none

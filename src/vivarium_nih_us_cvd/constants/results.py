@@ -29,8 +29,8 @@ PERSON_TIME_COLUMN_TEMPLATE = 'person_time_in_{YEAR}_among_{SEX}_in_age_group_{A
 DEATH_COLUMN_TEMPLATE = 'death_due_to_{CAUSE_OF_DEATH}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
 YLLS_COLUMN_TEMPLATE = 'ylls_due_to_{CAUSE_OF_DEATH}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
 YLDS_COLUMN_TEMPLATE = 'ylds_due_to_{CAUSE_OF_DISABILITY}_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
-STATE_PERSON_TIME_COLUMN_TEMPLATE = '{STATE}_person_time_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
-TRANSITION_COUNT_COLUMN_TEMPLATE = '{TRANSITION}_event_count_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}'
+STATE_PERSON_TIME_COLUMN_TEMPLATE = '{STATE}_person_time_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}_SBP_{HEALTH_STATE}_LDL_{HEALTH_STATE}_ACS_{ACS_STATE}'
+TRANSITION_COUNT_COLUMN_TEMPLATE = '{TRANSITION}_event_count_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}_SBP_{HEALTH_STATE}_LDL_{HEALTH_STATE}_ACS_{ACS_STATE}'
 
 COLUMN_TEMPLATES = {
     'population': TOTAL_POPULATION_COLUMN_TEMPLATE,
@@ -46,6 +46,8 @@ NON_COUNT_TEMPLATES = [
 ]
 
 POP_STATES = ('living', 'dead', 'tracked', 'untracked')
+HEALTH_STATES = ('high', 'low')
+ACS_STATES = ('post', 'none')
 SEXES = ('male', 'female')
 YEARS = tuple(range(2021, 2041))
 AGE_GROUPS = (
@@ -86,6 +88,8 @@ TEMPLATE_FIELD_MAP = {
     'CAUSE_OF_DISABILITY': CAUSES_OF_DISABILITY,
     'STATE': models.STATES,
     'TRANSITION': models.TRANSITIONS,
+    'HEALTH_STATE': HEALTH_STATES,
+    'ACS_STATE': ACS_STATES
 }
 
 
