@@ -13,7 +13,7 @@ for an example.
    No logging is done here. Logging is done in vivarium inputs itself and forwarded.
 """
 import pandas as pd
-from typing import Tuple, List
+from typing import Dict, Tuple, List
 
 from gbd_mapping import causes, covariates, risk_factors, Sequela, ModelableEntity
 from vivarium.framework.artifact import EntityKey
@@ -22,7 +22,7 @@ from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
 
-from vivarium_nih_us_cvd.constants import data_keys
+from vivarium_nih_us_cvd.constants import data_keys, models
 
 
 def get_measure_wrapped(entity: ModelableEntity, key: str, location: str) -> pd.DataFrame:
@@ -267,6 +267,34 @@ def load_high_risk_ldl_threshold(key: str, location: str) -> pd.DataFrame:
     # return ldl_exposure
 
 
+def modify_rr_affected_entity(art: Artifact, risk_key: str, mod_map: Dict[str, List[str]]) -> None:
+    """ Load RR data and duplicate selected rows so that the affected_entity and affected_measure
+        columns correspond to what is used in the disease model
+    """
+    def is_transition_rate(name: str) -> bool:
+        """ affected_measure needs to change to "transition_rate" in some cases
+        """
+        return '_to_' in name
+
+    # Note: not removing original affected_entity rows
+    df_orig = art.load(risk_key)
+    add_these = []
+    for key in mod_map.keys():
+        df_flat = df_orig.reset_index()
+        add_these.append(df_flat)
+
+        # this is the data to be duplicated
+        df_copy = df_flat.query(f'affected_entity=="{key}"')
+        for name in mod_map[key]:
+            df_new = df_copy.copy()
+            df_new.affected_entity = name
+            if is_transition_rate(name):
+                df_new.affected_measure = 'transition_rate'
+            add_these.append(df_new)
+    df = pd.concat(add_these, ignore_index=True)
+    df = df.set_index([c for c in df.columns if 'draw_' not in c])
+    art.replace(risk_key, df)
+
 
 def handle_special_cases(artifact: Artifact, location: str):
     artifact.write(data_keys.IHD.RESTRICTIONS_ANGINA, artifact.load(data_keys.IHD.RESTRICTIONS))
@@ -278,6 +306,20 @@ def handle_special_cases(artifact: Artifact, location: str):
     df_zeros = load_ihd_emr(data_keys.IHD.ANGINA_EMR, location)
     df_zeros[draws] = 0.0
     artifact.write(data_keys.IHD.CSMR_ANGINA, df_zeros)
+
+
+    # Need to make RR data match causes in the model
+    map = {
+        'ischemic_heart_disease': ['acute_myocardial_infarction', 'post_myocardial_infarction_to_acute_myocardial_infarction'],
+        'ischemic_stroke': ['acute_ischemic_stroke', 'chronic_ischemic_stroke_to_acute_ischemic_stroke'],
+    }
+    for key in [
+        data_keys.LDL_C.RELATIVE_RISK,
+        data_keys.LDL_C.PAF,
+        data_keys.SBP.RELATIVE_RISK,
+        data_keys.SBP.PAF
+    ]:
+        modify_rr_affected_entity(artifact, key, map)
 
 
 def get_entity(key: str):

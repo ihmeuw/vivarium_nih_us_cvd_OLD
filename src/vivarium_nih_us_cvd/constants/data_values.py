@@ -5,9 +5,8 @@ from typing import NamedTuple
 ############################
 # Disease Model Parameters #
 ############################
-
-REMISSION_RATE = 0.1
-MEAN_SOJOURN_TIME = 10
+THRESHOLD_HIGH_SBP = 140
+THRESHOLD_HIGH_LDLC = 5
 
 
 ##############################
