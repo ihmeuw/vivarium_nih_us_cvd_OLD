@@ -161,7 +161,6 @@ def get_state_person_time_measure_data(data):
 
 def get_transition_count_measure_data(data):
     data = get_measure_data(data, 'transition_count')
-    data['measure'] = 'transition_count'
     data['age'], data['tmp'] = data.age.str.split('_SBP_').str
     data['SBP'], data['tmp'] = data.tmp.str.split('_LDL_').str
     data['LDL'], data['tmp'] = data.tmp.str.split('_ACS_').str
