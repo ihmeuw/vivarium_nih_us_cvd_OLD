@@ -58,7 +58,7 @@ class __IHD(NamedTuple):
 
     @property
     def log_name(self):
-        return mod.IHD_MODEL_NAME.replace('_', ' ')
+        return self.name.replace('_', ' ')
 
 
 IHD = __IHD()
@@ -84,7 +84,7 @@ class __IschemicStroke(NamedTuple):
 
     @property
     def log_name(self):
-        return mod.ISCHEMIC_STROKE_MODEL_NAME.replace('_', ' ')
+        return self.name.replace('_', ' ')
 
 
 ISCHEMIC_STROKE = __IschemicStroke()
@@ -106,7 +106,7 @@ class __HighLDLCholesterol(NamedTuple):
 
     @property
     def log_name(self):
-        return 'high ldl cholesterol'
+        return self.name.replace('_', ' ')
 
 
 LDL_C = __HighLDLCholesterol()
@@ -128,11 +128,56 @@ class __HighSystolicBloodPressure(NamedTuple):
 
     @property
     def log_name(self):
-        return 'high systolic blood pressure'
+        return self.name.replace('_', ' ')
 
 
 SBP = __HighSystolicBloodPressure()
 
+
+class __FastingPlasmaGlucose(NamedTuple):
+    DISTRIBUTION: str = 'risk_factor.high_fasting_plasma_glucose.distribution'
+    EXPOSURE_MEAN: str = 'risk_factor.high_fasting_plasma_glucose.exposure'
+    EXPOSURE_SD: str = 'risk_factor.high_fasting_plasma_glucose.exposure_standard_deviation'
+    EXPOSURE_WEIGHTS: str = 'risk_factor.high_fasting_plasma_glucose.exposure_distribution_weights'
+    RELATIVE_RISK: str = 'risk_factor.high_fasting_plasma_glucose.relative_risk'
+    PAF: str = 'risk_factor.high_fasting_plasma_glucose.population_attributable_fraction'
+    TMRED: str = 'risk_factor.high_fasting_plasma_glucose_continuous.tmred'
+    TMRED_LOCAL = 'risk_factor.high_fasting_plasma_glucose.tmred'
+    RELATIVE_RISK_SCALAR: str = 'risk_factor.high_fasting_plasma_glucose_continuous.relative_risk_scalar'
+    RELATIVE_RISK_SCALAR_LOCAL = 'risk_factor.high_fasting_plasma_glucose.relative_risk_scalar'
+
+    @property
+    def name(self):
+        return 'high_fasting_plasma_glucose'
+
+    @property
+    def log_name(self):
+        return self.name.replace('_', ' ')
+
+
+FPG = __FastingPlasmaGlucose()
+
+
+class __BMI(NamedTuple):
+    DISTRIBUTION: str = 'risk_factor.high_body_mass_index_in_adults.distribution'
+    EXPOSURE_MEAN: str = 'risk_factor.high_body_mass_index_in_adults.exposure'
+    EXPOSURE_SD: str = 'risk_factor.high_body_mass_index_in_adults.exposure_standard_deviation'
+    EXPOSURE_WEIGHTS: str = 'risk_factor.high_body_mass_index_in_adults.exposure_distribution_weights'
+    RELATIVE_RISK: str = 'risk_factor.high_body_mass_index_in_adults.relative_risk'
+    PAF: str = 'risk_factor.high_body_mass_index_in_adults.population_attributable_fraction'
+    TMRED: str = 'risk_factor.high_body_mass_index_in_adults.tmred'
+    RELATIVE_RISK_SCALAR: str = 'risk_factor.high_body_mass_index_in_adults.relative_risk_scalar'
+
+    @property
+    def name(self):
+        return 'high_body_mass_index_in_adults'
+
+    @property
+    def log_name(self):
+        return self.name.replace('_', ' ')
+
+
+BMI = __BMI()
 
 
 MAKE_ARTIFACT_KEY_GROUPS = [
@@ -141,4 +186,6 @@ MAKE_ARTIFACT_KEY_GROUPS = [
     ISCHEMIC_STROKE,
     LDL_C,
     SBP,
+    BMI,
+    FPG,
 ]

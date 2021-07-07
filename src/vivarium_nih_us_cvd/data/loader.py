@@ -105,6 +105,24 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.SBP.PAF: load_standard_data,
         data_keys.SBP.TMRED: load_metadata,
         data_keys.SBP.RELATIVE_RISK_SCALAR: load_metadata,
+
+        data_keys.FPG.DISTRIBUTION: load_metadata_mapped,
+        data_keys.FPG.EXPOSURE_MEAN: load_standard_data,
+        data_keys.FPG.EXPOSURE_SD: load_standard_data,
+        data_keys.FPG.EXPOSURE_WEIGHTS: load_standard_data,
+        data_keys.FPG.RELATIVE_RISK: load_standard_data,
+        data_keys.FPG.PAF: load_standard_data,
+        data_keys.FPG.TMRED: load_metadata,
+        data_keys.FPG.RELATIVE_RISK_SCALAR: load_metadata,
+
+        data_keys.BMI.DISTRIBUTION: load_metadata,
+        data_keys.BMI.EXPOSURE_MEAN: load_standard_data,
+        data_keys.BMI.EXPOSURE_SD: load_standard_data,
+        data_keys.BMI.EXPOSURE_WEIGHTS: load_standard_data,
+        data_keys.BMI.RELATIVE_RISK: load_standard_data,
+        data_keys.BMI.PAF: load_standard_data,
+        data_keys.BMI.TMRED: load_metadata,
+        data_keys.BMI.RELATIVE_RISK_SCALAR: load_metadata,
     }
     return mapping[lookup_key](lookup_key, location)
 
@@ -147,6 +165,13 @@ def load_metadata(key: str, location: str):
     return entity_metadata
 
 
+def load_metadata_mapped(key: str, location: str):
+    map = {
+        data_keys.FPG.DISTRIBUTION: 'ensemble'
+    }
+    return map[key]
+
+
 def _load_em_from_meid(meid: int, measure: str, location: str):
     location_id = utility_data.get_location_id(location)
     data = gbd.get_modelable_entity_draws(meid, location_id)
@@ -158,6 +183,7 @@ def _load_em_from_meid(meid: int, measure: str, location: str):
     data = vi_utils.split_interval(data, interval_column='age', split_column_prefix='age')
     data = vi_utils.split_interval(data, interval_column='year', split_column_prefix='year')
     return vi_utils.sort_hierarchical_data(data).droplevel('location')
+
 
 #
 # project-specific data functions here
@@ -317,9 +343,16 @@ def handle_special_cases(artifact: Artifact, location: str):
         data_keys.LDL_C.RELATIVE_RISK,
         data_keys.LDL_C.PAF,
         data_keys.SBP.RELATIVE_RISK,
-        data_keys.SBP.PAF
+        data_keys.SBP.PAF,
+        data_keys.BMI.RELATIVE_RISK,
+        data_keys.BMI.PAF,
+        data_keys.FPG.RELATIVE_RISK,
+        data_keys.FPG.PAF,
     ]:
         modify_rr_affected_entity(artifact, key, map)
+
+    artifact.write(data_keys.FPG.TMRED_LOCAL, artifact.load(data_keys.FPG.TMRED))
+    artifact.write(data_keys.FPG.RELATIVE_RISK_SCALAR_LOCAL, artifact.load(data_keys.FPG.RELATIVE_RISK_SCALAR))
 
 
 def get_entity(key: str):
