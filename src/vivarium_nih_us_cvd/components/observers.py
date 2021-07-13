@@ -1,8 +1,11 @@
-from collections import Counter
 import typing
-from typing import Dict, Iterable, List, Tuple, Union
-
 import pandas as pd
+import operator as op
+from collections import Counter
+from functools import reduce
+from typing import Dict, Iterable, List, Tuple, NamedTuple
+from itertools import product
+
 from vivarium_public_health.metrics import (MortalityObserver as MortalityObserver_,
                                             DisabilityObserver as DisabilityObserver_)
 from vivarium_public_health.metrics.utilities import (get_state_person_time, QueryString, 
@@ -14,6 +17,11 @@ if typing.TYPE_CHECKING:
     from vivarium.framework.engine import Builder
     from vivarium.framework.event import Event
     from vivarium.framework.population import SimulantData
+
+
+class MaskAndId(NamedTuple):
+    mask: pd.Series
+    id: str
 
 
 class ResultsStratifier:
@@ -36,6 +44,9 @@ class ResultsStratifier:
         # results stratification.
         self.sbp = builder.value.get_value('high_systolic_blood_pressure.exposure')
         self.ldlc = builder.value.get_value('high_ldl_cholesterol.exposure')
+        self.fpg = builder.value.get_value('high_fasting_plasma_glucose.exposure')
+        self.bmi = builder.value.get_value('high_body_mass_index_in_adults.exposure')
+
         columns_required = [models.IHD_MODEL_NAME,
                             models.ISCHEMIC_STROKE_MODEL_NAME]
         self.population_view = builder.population.get_view(columns_required)
@@ -49,8 +60,11 @@ class ResultsStratifier:
     def on_initialize_simulants(self, pop_data: 'SimulantData'):
         risk_groups = pd.Series('', index=pop_data.index)
         pop = self.population_view.get(pop_data.index)
+
         sbp = self.sbp(pop_data.index)
         ldlc = self.ldlc(pop_data.index)
+        fpg = self.fpg(pop_data.index)
+        bmi = self.bmi(pop_data.index)
 
         post_acs = (
                 (pop[models.IHD_MODEL_NAME] != models.IHD_SUSCEPTIBLE_STATE_NAME)
@@ -59,15 +73,21 @@ class ResultsStratifier:
         )
         high_sbp = sbp > data_values.THRESHOLD_HIGH_SBP
         high_ldlc = ldlc > data_values.THRESHOLD_HIGH_LDLC
+        high_fpg = fpg > data_values.THRESHOLD_HIGH_FPG
+        high_bmi = bmi > data_values.THRESHOLD_HIGH_BMI
 
-        risk_groups.loc[high_sbp & high_ldlc & post_acs] = data_values.RISK_GROUPS.SBP_high_LDL_high_ACS_post
-        risk_groups.loc[high_sbp & high_ldlc & ~post_acs] = data_values.RISK_GROUPS.SBP_high_LDL_high_ACS_none
-        risk_groups.loc[high_sbp & ~high_ldlc & post_acs] = data_values.RISK_GROUPS.SBP_high_LDL_low_ACS_post
-        risk_groups.loc[high_sbp & ~high_ldlc & ~post_acs] = data_values.RISK_GROUPS.SBP_high_LDL_low_ACS_none
-        risk_groups.loc[~high_sbp & high_ldlc & post_acs] = data_values.RISK_GROUPS.SBP_low_LDL_high_ACS_post
-        risk_groups.loc[~high_sbp & high_ldlc & ~post_acs] = data_values.RISK_GROUPS.SBP_low_LDL_high_ACS_none
-        risk_groups.loc[~high_sbp & ~high_ldlc & post_acs] = data_values.RISK_GROUPS.SBP_low_LDL_low_ACS_post
-        risk_groups.loc[~high_sbp & ~high_ldlc & ~post_acs] = data_values.RISK_GROUPS.SBP_low_LDL_low_ACS_none
+        groups = []
+        groups.append([MaskAndId(high_sbp, 'SBP_high'), MaskAndId(~high_sbp, 'SBP_normal')])
+        groups.append([MaskAndId(high_ldlc, 'LDL_high'), MaskAndId(~high_ldlc, 'LDL_normal')])
+        groups.append([MaskAndId(post_acs, 'ACS_post'), MaskAndId(~post_acs, 'ACS_none')])
+        groups.append([MaskAndId(high_fpg, 'FPG_high'), MaskAndId(~high_fpg, 'FPG_normal')])
+        groups.append([MaskAndId(high_bmi, 'BMI_high'), MaskAndId(~high_bmi, 'BMI_normal')])
+        p_groups = product(*groups)
+
+        for group in p_groups:
+            mask = reduce(op.and_, [j.mask for j in group])
+            id_str = '_'.join([j.id for j in group])
+            risk_groups.loc[mask] = id_str
 
         self.risk_groups = risk_groups
 

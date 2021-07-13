@@ -7,6 +7,9 @@ from typing import NamedTuple
 ############################
 THRESHOLD_HIGH_SBP = 140
 THRESHOLD_HIGH_LDLC = 5
+THRESHOLD_HIGH_FPG = 7
+THRESHOLD_HIGH_BMI = 25
+THRESHOLD_LOW_BMI = 20
 
 
 ##############################
