@@ -36,6 +36,7 @@ class ResultsStratifier:
 
     def __init__(self, observer_name: str):
         self.name = f'{observer_name}_results_stratifier'
+        self._risk_group_ids = []
 
     # noinspection PyAttributeOutsideInit
     def setup(self, builder: 'Builder'):
@@ -78,12 +79,15 @@ class ResultsStratifier:
         groups.append([MaskAndId(high_bmi, 'BMI_high'), MaskAndId(~high_bmi, 'BMI_normal')])
         p_groups = product(*groups)
 
+        # This generates a list of concatenated strings from the stratification layers:
+        #   "SBP_high_LDL_high_FPG_high_BMI_high"
+        self._risk_group_ids = ['_'.join(i) for i in list(product(*[[g[0].id, g[1].id] for g in groups]))]
+
         for group in p_groups:
             mask = reduce(op.and_, [j.mask for j in group])
             id_str = '_'.join([j.id for j in group])
             risk_groups.loc[mask] = id_str
 
-        self.risk_group_names = risk_groups.unique()
         self.risk_groups = risk_groups
 
     def group(self, population: pd.DataFrame) -> Iterable[Tuple[Tuple[str, ...], pd.DataFrame]]:
@@ -101,7 +105,7 @@ class ResultsStratifier:
 
         """
         stratification_group = self.risk_groups.loc[population.index]
-        for risk_cat in self.risk_group_names:
+        for risk_cat in self._risk_group_ids:
             if population.empty:
                 pop_in_group = population
             else:
