@@ -36,6 +36,7 @@ class ResultsStratifier:
 
     def __init__(self, observer_name: str):
         self.name = f'{observer_name}_results_stratifier'
+        self._risk_group_ids = []
 
     # noinspection PyAttributeOutsideInit
     def setup(self, builder: 'Builder'):
@@ -66,11 +67,6 @@ class ResultsStratifier:
         fpg = self.fpg(pop_data.index)
         bmi = self.bmi(pop_data.index)
 
-        post_acs = (
-                (pop[models.IHD_MODEL_NAME] != models.IHD_SUSCEPTIBLE_STATE_NAME)
-                | (pop[models.ISCHEMIC_STROKE_MODEL_NAME]
-                   != models.ISCHEMIC_STROKE_SUSCEPTIBLE_STATE_NAME)
-        )
         high_sbp = sbp > data_values.THRESHOLD_HIGH_SBP
         high_ldlc = ldlc > data_values.THRESHOLD_HIGH_LDLC
         high_fpg = fpg > data_values.THRESHOLD_HIGH_FPG
@@ -79,10 +75,13 @@ class ResultsStratifier:
         groups = []
         groups.append([MaskAndId(high_sbp, 'SBP_high'), MaskAndId(~high_sbp, 'SBP_normal')])
         groups.append([MaskAndId(high_ldlc, 'LDL_high'), MaskAndId(~high_ldlc, 'LDL_normal')])
-        groups.append([MaskAndId(post_acs, 'ACS_post'), MaskAndId(~post_acs, 'ACS_none')])
         groups.append([MaskAndId(high_fpg, 'FPG_high'), MaskAndId(~high_fpg, 'FPG_normal')])
         groups.append([MaskAndId(high_bmi, 'BMI_high'), MaskAndId(~high_bmi, 'BMI_normal')])
         p_groups = product(*groups)
+
+        # This generates a list of concatenated strings from the stratification layers:
+        #   "SBP_high_LDL_high_FPG_high_BMI_high"
+        self._risk_group_ids = ['_'.join(i) for i in list(product(*[[g[0].id, g[1].id] for g in groups]))]
 
         for group in p_groups:
             mask = reduce(op.and_, [j.mask for j in group])
@@ -106,7 +105,7 @@ class ResultsStratifier:
 
         """
         stratification_group = self.risk_groups.loc[population.index]
-        for risk_cat in data_values.RISK_GROUPS:
+        for risk_cat in self._risk_group_ids:
             if population.empty:
                 pop_in_group = population
             else:

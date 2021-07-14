@@ -154,8 +154,9 @@ def get_state_person_time_measure_data(data):
     data['measure'], data['cause'] = 'state_person_time', data.measure.str.split('_person_time').str[0]
     data['age'], data['tmp'] = data.age.str.split('_SBP_').str
     data['SBP'], data['tmp'] = data.tmp.str.split('_LDL_').str
-    data['LDL'], data['tmp'] = data.tmp.str.split('_ACS_').str
-    data['ACS'] = data.tmp
+    data['LDL'], data['tmp'] = data.tmp.str.split('_FPG_').str
+    data['FPG'], data['tmp'] = data.tmp.str.split('_BMI_').str
+    data['BMI'] = data.tmp
     return sort_data(data.drop(columns='tmp'))
 
 
@@ -163,6 +164,7 @@ def get_transition_count_measure_data(data):
     data = get_measure_data(data, 'transition_count')
     data['age'], data['tmp'] = data.age.str.split('_SBP_').str
     data['SBP'], data['tmp'] = data.tmp.str.split('_LDL_').str
-    data['LDL'], data['tmp'] = data.tmp.str.split('_ACS_').str
-    data['ACS'] = data.tmp
+    data['LDL'], data['tmp'] = data.tmp.str.split('_FPG_').str
+    data['FPG'], data['tmp'] = data.tmp.str.split('_BMI_').str
+    data['BMI'] = data.tmp
     return sort_data(data.drop(columns='tmp'))
