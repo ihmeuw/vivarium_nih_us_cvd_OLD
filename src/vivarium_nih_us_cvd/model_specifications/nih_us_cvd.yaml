@@ -29,13 +29,13 @@ components:
         metrics:
             - DisabilityObserver()
             - MortalityObserver()
-            - DiseaseObserver("angina")
             
     vivarium_nih_us_cvd.components:
         - IschemicHeartDisease()
         - IschemicStroke()
         - DiseaseObserver("ischemic_heart_disease")
         - DiseaseObserver("ischemic_stroke")
+        - DiseaseObserver("angina")
 
 configuration:
     input_data:
