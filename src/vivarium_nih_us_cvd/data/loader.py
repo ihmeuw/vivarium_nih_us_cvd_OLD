@@ -87,6 +87,13 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.ISCHEMIC_STROKE.CSMR: load_standard_data,
         data_keys.ISCHEMIC_STROKE.RESTRICTIONS: load_metadata,
 
+        data_keys.PAD.PREVALENCE: load_standard_data,
+        data_keys.PAD.INCIDENCE: load_standard_data,
+        data_keys.PAD.DW: load_standard_data,
+        data_keys.PAD.EMR: load_standard_data,
+        data_keys.PAD.CSMR: load_standard_data,
+        data_keys.PAD.RESTRICTIONS: load_metadata,
+
         data_keys.LDL_C.DISTRIBUTION: load_metadata,
         data_keys.LDL_C.EXPOSURE_MEAN: load_standard_data,
         data_keys.LDL_C.EXPOSURE_SD: load_standard_data,
