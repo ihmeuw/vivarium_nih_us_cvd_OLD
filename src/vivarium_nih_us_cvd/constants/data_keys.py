@@ -90,6 +90,27 @@ class __IschemicStroke(NamedTuple):
 ISCHEMIC_STROKE = __IschemicStroke()
 
 
+class __PeripheralArterialDisease(NamedTuple):
+    CSMR: str = f'cause.{mod.PAD_MODEL_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS: str = f'cause.{mod.PAD_MODEL_NAME}.restrictions'
+    INCIDENCE: str = f'cause.{mod.PAD_MODEL_NAME}.incidence_rate'
+    PREVALENCE: str = f'cause.{mod.PAD_MODEL_NAME}.prevalence' 
+    EMR: str = f'cause.{mod.PAD_MODEL_NAME}.excess_mortality_rate'
+    DW: str = f'cause.{mod.PAD_MODEL_NAME}.disability_weight'
+
+    @property
+    def name(self):
+        return mod.PAD_MODEL_NAME
+
+    @property
+    def log_name(self):
+        return self.name.replace('_', ' ')
+
+
+PAD = __PeripheralArterialDisease()
+
+
+
 class __HighLDLCholesterol(NamedTuple):
     DISTRIBUTION: str = 'risk_factor.high_ldl_cholesterol.distribution'
     EXPOSURE_MEAN: str = 'risk_factor.high_ldl_cholesterol.exposure'
@@ -180,10 +201,13 @@ class __BMI(NamedTuple):
 BMI = __BMI()
 
 
+
+
 MAKE_ARTIFACT_KEY_GROUPS = [
     POPULATION,
     IHD,
     ISCHEMIC_STROKE,
+    PAD,
     LDL_C,
     SBP,
     BMI,
