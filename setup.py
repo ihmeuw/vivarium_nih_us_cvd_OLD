@@ -33,8 +33,8 @@ if __name__ == "__main__":
 
     # use "pip install -e .[dev]" to install required components + extra components
     extras_require = [
-        'vivarium_cluster_tools==1.2.4',
-        'vivarium_inputs[data]==4.0.2',
+        'vivarium_cluster_tools==1.2.5',
+        'vivarium_inputs[data]==4.0.4',
     ]
 
     setup(
