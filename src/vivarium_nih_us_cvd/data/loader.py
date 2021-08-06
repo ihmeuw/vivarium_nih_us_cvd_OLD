@@ -94,6 +94,13 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.PAD.CSMR: load_standard_data,
         data_keys.PAD.RESTRICTIONS: load_metadata,
 
+        data_keys.AFIB.PREVALENCE: load_standard_data,
+        data_keys.AFIB.INCIDENCE: load_standard_data,
+        data_keys.AFIB.DW: load_standard_data,
+        data_keys.AFIB.EMR: load_standard_data,
+        data_keys.AFIB.CSMR: load_standard_data,
+        data_keys.AFIB.RESTRICTIONS: load_metadata,
+
         data_keys.LDL_C.DISTRIBUTION: load_metadata,
         data_keys.LDL_C.EXPOSURE_MEAN: load_standard_data,
         data_keys.LDL_C.EXPOSURE_SD: load_standard_data,

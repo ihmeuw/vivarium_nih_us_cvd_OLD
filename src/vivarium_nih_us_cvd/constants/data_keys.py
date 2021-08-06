@@ -110,6 +110,26 @@ class __PeripheralArterialDisease(NamedTuple):
 PAD = __PeripheralArterialDisease()
 
 
+class __AtrialFibrillation(NamedTuple):
+    CSMR: str = f'cause.{mod.AFIB_MODEL_NAME}.cause_specific_mortality_rate'
+    RESTRICTIONS: str = f'cause.{mod.AFIB_MODEL_NAME}.restrictions'
+    INCIDENCE: str = f'cause.{mod.AFIB_MODEL_NAME}.incidence_rate'
+    PREVALENCE: str = f'cause.{mod.AFIB_MODEL_NAME}.prevalence' 
+    EMR: str = f'cause.{mod.AFIB_MODEL_NAME}.excess_mortality_rate'
+    DW: str = f'cause.{mod.AFIB_MODEL_NAME}.disability_weight'
+
+    @property
+    def name(self):
+        return mod.AFIB_MODEL_NAME
+
+    @property
+    def log_name(self):
+        return self.name.replace('_', ' ')
+
+
+AFIB = __AtrialFibrillation()
+
+
 
 class __HighLDLCholesterol(NamedTuple):
     DISTRIBUTION: str = 'risk_factor.high_ldl_cholesterol.distribution'
@@ -208,6 +228,7 @@ MAKE_ARTIFACT_KEY_GROUPS = [
     IHD,
     ISCHEMIC_STROKE,
     PAD,
+    AFIB,
     LDL_C,
     SBP,
     BMI,
