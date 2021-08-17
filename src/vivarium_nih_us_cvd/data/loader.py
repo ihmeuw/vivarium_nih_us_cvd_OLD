@@ -13,7 +13,7 @@ for an example.
    No logging is done here. Logging is done in vivarium inputs itself and forwarded.
 """
 import pandas as pd
-from typing import Dict, Tuple, List
+from typing import Dict, Tuple, List, Union
 
 from gbd_mapping import causes, covariates, risk_factors, Sequela, ModelableEntity
 from vivarium.framework.artifact import EntityKey
@@ -21,11 +21,10 @@ from vivarium.framework.artifact.artifact import Artifact
 from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
+from vivarium_nih_us_cvd.constants import data_keys
 
-from vivarium_nih_us_cvd.constants import data_keys, models
 
-
-def get_measure_wrapped(entity: ModelableEntity, key: str, location: str) -> pd.DataFrame:
+def get_measure_wrapped(entity: ModelableEntity, key: Union[str, data_keys.SourceSink], location: str) -> pd.DataFrame:
     '''
     All calls to get_measure() need to have the location dropped. For the time being,
     simply use this function.
@@ -33,7 +32,68 @@ def get_measure_wrapped(entity: ModelableEntity, key: str, location: str) -> pd.
     return interface.get_measure(entity, key, location).droplevel('location')
 
 
-def get_data(lookup_key: str, location: str) -> pd.DataFrame:
+def get_key(val: Union[str, data_keys.SourceSink]):
+    return val.source if isinstance(val, data_keys.SourceSink) else val
+
+
+def load_population_location(key: str, location: str) -> str:
+    if key != data_keys.POPULATION.LOCATION:
+        raise ValueError(f'Unrecognized key {key}')
+
+    return location
+
+
+def load_population_structure(key: str, location: str) -> pd.DataFrame:
+    return interface.get_population_structure(location)
+
+
+def load_age_bins(key: str, location: str) -> pd.DataFrame:
+    return interface.get_age_bins()
+
+
+def load_demographic_dimensions(key: str, location: str) -> pd.DataFrame:
+    return interface.get_demographic_dimensions(location)
+
+
+def load_theoretical_minimum_risk_life_expectancy(key: str, location: str) -> pd.DataFrame:
+    return interface.get_theoretical_minimum_risk_life_expectancy()
+
+
+def load_standard_data(key: str, location: str) -> pd.DataFrame:
+    key = EntityKey(key)
+    entity = get_entity(key)
+    return get_measure_wrapped(entity, key.measure, location)
+
+
+def load_metadata(key: str, location: str):
+    key = EntityKey(key)
+    entity = get_entity(key)
+    entity_metadata = entity[key.measure]
+    if hasattr(entity_metadata, 'to_dict'):
+        entity_metadata = entity_metadata.to_dict()
+    return entity_metadata
+
+
+def load_metadata_mapped(key: str, location: str):
+    map = {
+        data_keys.FPG.DISTRIBUTION: 'ensemble'
+    }
+    return map[key]
+
+
+STD_FUNCS = [
+    load_population_location,
+    load_population_structure,
+    load_age_bins,
+    load_demographic_dimensions,
+    load_theoretical_minimum_risk_life_expectancy,
+    load_standard_data,
+    load_metadata,
+    load_metadata_mapped
+    ]
+
+
+def get_data(lookup_key: Union[str, data_keys.SourceSink], location: str) -> pd.DataFrame:
     """Retrieves data from an appropriate source.
 
     Parameters
@@ -57,33 +117,40 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.POPULATION.TMRLE: load_theoretical_minimum_risk_life_expectancy,
         data_keys.POPULATION.ACMR: load_standard_data,
 
-        data_keys.IHD.MI_ACUTE_PREV: load_ihd_prevalence,
-        data_keys.IHD.MI_POST_PREV: load_ihd_prevalence,
-        data_keys.IHD.ANGINA_PREV: load_ihd_prevalence,
+        data_keys.MI.PREVALENCE_ACUTE: load_prevalence_ihd,
+        data_keys.MI.PREVALENCE_POST: load_prevalence_ihd,
+        data_keys.MI.INCIDENCE_ACUTE: load_incidence_ihd,
+        data_keys.MI.INCIDENCE_POST: load_incidence_ihd,
+        data_keys.MI.DW_ACUTE: load_dw_ihd,
+        data_keys.MI.DW_POST: load_dw_ihd,
+        data_keys.MI.EMR_ACUTE: load_emr,
+        data_keys.MI.EMR_POST: load_emr,
+        data_keys.MI.CSMR: load_standard_data,
+        data_keys.MI.RESTRICTIONS: load_metadata,
 
-        data_keys.IHD.MI_ACUTE_INCIDENCE: load_ihd_incidence,
-        data_keys.IHD.MI_POST_INCIDENCE: load_ihd_incidence,
-        data_keys.IHD.ANGINA_INCIDENCE: load_ihd_incidence,
+        data_keys.ANGINA.PREVALENCE: load_prevalence_ihd,
+        data_keys.ANGINA.INCIDENCE: load_incidence_ihd,
+        data_keys.ANGINA.EMR: load_emr,
+        data_keys.ANGINA.DW: load_dw_ihd,
+        data_keys.ANGINA.RESTRICTIONS: load_metadata,
+        data_keys.ANGINA.CSMR: load_csmr_angina,
 
-        data_keys.IHD.MI_ACUTE_DW: load_ihd_disability_weight,
-        data_keys.IHD.MI_POST_DW: load_ihd_disability_weight,
-        data_keys.IHD.ANGINA_DW: load_ihd_disability_weight,
+        data_keys.HF_IHD.PREVALENCE: load_prevalence_ihd,
+        data_keys.HF_IHD.INCIDENCE: load_incidence_ihd,
+        data_keys.HF_IHD.EMR: load_emr,
+        data_keys.HF_IHD.DW: load_dw_ihd,
+        data_keys.HF_IHD.RESTRICTIONS: load_metadata,
+        data_keys.HF_IHD.CSMR: load_standard_data,
 
-        data_keys.IHD.MI_ACUTE_EMR: load_ihd_emr,
-        data_keys.IHD.MI_POST_EMR: load_ihd_emr,
-        data_keys.IHD.ANGINA_EMR: load_ihd_emr,
-        data_keys.IHD.CSMR: load_standard_data,
-        data_keys.IHD.RESTRICTIONS: load_metadata,
+        data_keys.ISCHEMIC_STROKE.PREVALENCE_ACUTE: load_prevalence_ischemic_stroke,
+        data_keys.ISCHEMIC_STROKE.PREVALENCE_CHRONIC: load_prevalence_ischemic_stroke,
 
-        data_keys.ISCHEMIC_STROKE.ACUTE_PREV: load_ischemic_stroke_prevalence,
-        data_keys.ISCHEMIC_STROKE.CHRONIC_PREV: load_ischemic_stroke_prevalence,
+        data_keys.ISCHEMIC_STROKE.DW_ACUTE: load_disability_weight_ischemic_stroke_,
+        data_keys.ISCHEMIC_STROKE.DW_CHRONIC: load_disability_weight_ischemic_stroke_,
 
-        data_keys.ISCHEMIC_STROKE.ACUTE_DW: load_ischemic_stroke_disability_weight,
-        data_keys.ISCHEMIC_STROKE.CHRONIC_DW: load_ischemic_stroke_disability_weight,
-
-        data_keys.ISCHEMIC_STROKE.ACUTE_EMR: load_ischemic_stroke_emr,
-        data_keys.ISCHEMIC_STROKE.CHRONIC_EMR: load_ischemic_stroke_emr,
-        data_keys.ISCHEMIC_STROKE.ACUTE_INCIDENCE: load_standard_data,
+        data_keys.ISCHEMIC_STROKE.EMR_ACUTE: load_emr_ischemic_stroke,
+        data_keys.ISCHEMIC_STROKE.EMR_CHRONIC: load_emr_ischemic_stroke,
+        data_keys.ISCHEMIC_STROKE.INCIDENCE_ACUTE: load_standard_data,
         data_keys.ISCHEMIC_STROKE.CSMR: load_standard_data,
         data_keys.ISCHEMIC_STROKE.RESTRICTIONS: load_metadata,
 
@@ -138,52 +205,10 @@ def get_data(lookup_key: str, location: str) -> pd.DataFrame:
         data_keys.BMI.TMRED: load_metadata,
         data_keys.BMI.RELATIVE_RISK_SCALAR: load_metadata,
     }
-    return mapping[lookup_key](lookup_key, location)
-
-
-def load_population_location(key: str, location: str) -> str:
-    if key != data_keys.POPULATION.LOCATION:
-        raise ValueError(f'Unrecognized key {key}')
-
-    return location
-
-
-def load_population_structure(key: str, location: str) -> pd.DataFrame:
-    return interface.get_population_structure(location)
-
-
-def load_age_bins(key: str, location: str) -> pd.DataFrame:
-    return interface.get_age_bins()
-
-
-def load_demographic_dimensions(key: str, location: str) -> pd.DataFrame:
-    return interface.get_demographic_dimensions(location)
-
-
-def load_theoretical_minimum_risk_life_expectancy(key: str, location: str) -> pd.DataFrame:
-    return interface.get_theoretical_minimum_risk_life_expectancy()
-
-
-def load_standard_data(key: str, location: str) -> pd.DataFrame:
-    key = EntityKey(key)
-    entity = get_entity(key)
-    return get_measure_wrapped(entity, key.measure, location)
-
-
-def load_metadata(key: str, location: str):
-    key = EntityKey(key)
-    entity = get_entity(key)
-    entity_metadata = entity[key.measure]
-    if hasattr(entity_metadata, 'to_dict'):
-        entity_metadata = entity_metadata.to_dict()
-    return entity_metadata
-
-
-def load_metadata_mapped(key: str, location: str):
-    map = {
-        data_keys.FPG.DISTRIBUTION: 'ensemble'
-    }
-    return map[key]
+    func = mapping[lookup_key]
+    if func in STD_FUNCS:
+        lookup_key = get_key(lookup_key)
+    return func(lookup_key, location)
 
 
 def _load_em_from_meid(meid: int, measure: str, location: str):
@@ -202,65 +227,100 @@ def _load_em_from_meid(meid: int, measure: str, location: str):
 #
 # project-specific data functions here
 #
-def get_prevalence_weighted_disability_weight(sequelae: List[Sequela], location: str) -> List[pd.DataFrame]:
+def get_prevalence_weighted_disability_weight(seq: List[Sequela], location: str) -> List[pd.DataFrame]:
+    assert len(seq), "Empty List - get_prevalence_weighted_disability_weight()"
     prevalence_disability_weights = []
-    for s in sequelae:
+    for s in seq:
         prevalence = get_measure_wrapped(s, 'prevalence', location)
         disability_weight = get_measure_wrapped(s, 'disability_weight', location)
         prevalence_disability_weights.append(prevalence * disability_weight)
     return prevalence_disability_weights
 
 
-def get_ihd_sequelae() -> Tuple[List[Sequela], List[Sequela], List[Sequela]]:
-    acute_mi_sequelae = [s for s in causes.ischemic_heart_disease.sequelae if 'acute' in s.name]
-    post_mi_sequelae = [s for s in causes.ischemic_heart_disease.sequelae if 'ischemic_heart_disease' in s.name]
-    angina_mi_sequelae = [s for s in causes.ischemic_heart_disease.sequelae if 'angina' in s.name]
-    return acute_mi_sequelae, post_mi_sequelae, angina_mi_sequelae
-
-
-def load_ihd_prevalence(key: str, location: str) -> pd.DataFrame:
-    acute_mi_sequelae, post_mi_sequelae, angina_mi_sequelae = get_ihd_sequelae()
-    map = {
-        data_keys.IHD.MI_ACUTE_PREV: acute_mi_sequelae,
-        data_keys.IHD.MI_POST_PREV: post_mi_sequelae,
-        data_keys.IHD.ANGINA_PREV: angina_mi_sequelae,
+def get_ihd_sequelae() -> Tuple[Dict[str, List[Sequela]], Dict[int, Sequela]]:
+    by_cause = {
+        'acute': causes.ischemic_heart_disease.sequelae[:2],
+        'post': [causes.ischemic_heart_disease.sequelae[9]],
+        'angina': [s for s in causes.ischemic_heart_disease.sequelae if 'angina' in s.name],
+        'heart_failure': [s for s in causes.ischemic_heart_disease.sequelae if 'heart_failure' in s.name]
     }
-    prevalence = sum(get_measure_wrapped(s, 'prevalence', location) for s in map[key])
+
+    by_seq_id = {}
+    for s in causes.ischemic_heart_disease.sequelae:
+        id = int(str(s.gbd_id).split('(')[1][:-1])
+        by_seq_id[id] = s
+
+    return by_cause, by_seq_id
+
+
+def load_prevalence_ihd(key: data_keys.SourceSink, location: str) -> pd.DataFrame:
+    ihd_seq, _ = get_ihd_sequelae()
+    map = {
+        data_keys.MI.PREVALENCE_ACUTE.sink: ihd_seq['acute'],
+        data_keys.MI.PREVALENCE_POST.sink: ihd_seq['post'],
+        data_keys.ANGINA.PREVALENCE.sink: ihd_seq['angina'],
+        data_keys.HF_IHD.PREVALENCE.sink: ihd_seq['heart_failure'],
+    }
+    return load_prevalence(map[key.sink], location)
+
+
+def load_prevalence(seq: List[Sequela], location: str) -> pd.DataFrame:
+    prevalence = sum(get_measure_wrapped(s, 'prevalence', location) for s in seq)
     return prevalence
 
 
-def load_ihd_incidence(key: str, location: str) -> pd.DataFrame:
+def load_incidence_ihd(key: data_keys.SourceSink, location: str) -> pd.DataFrame:
+    ihd_seq, _ = get_ihd_sequelae()
     map = {
-        data_keys.IHD.MI_ACUTE_INCIDENCE: 24694,
-        data_keys.IHD.MI_POST_INCIDENCE: 24694,
-        data_keys.IHD.ANGINA_INCIDENCE: 1817,
+        data_keys.MI.INCIDENCE_ACUTE.sink: (ihd_seq['acute'], 24694),
+        data_keys.MI.INCIDENCE_POST.sink: (ihd_seq['post'], 24694),
+        data_keys.ANGINA.INCIDENCE.sink: (ihd_seq['angina'], 1817),
+        data_keys.HF_IHD.INCIDENCE.sink: (ihd_seq['heart_failure'], 2412)
     }
-    #ihd_all = get_measure_wrapped(causes.ischemic_heart_disease, 'prevalence', location)
-    ihd_prev_this = _load_em_from_meid(map[key], 'Prevalence', location)
-    ihd_this = _load_em_from_meid(map[key], 'Incidence rate', location)
-    return ihd_this / (1 - ihd_prev_this)
+    seq, meid = map[key.sink]
+    prevalence = sum(get_measure_wrapped(s, 'prevalence', location) for s in seq)
+    incidence = _load_em_from_meid(meid, 'Incidence rate', location)
+    return incidence / (1 - prevalence)
 
 
-def load_ihd_disability_weight(key: str, location: str) -> pd.DataFrame:
-    acute_mi_sequelae, post_mi_sequelae, angina_mi_sequelae = get_ihd_sequelae()
+def load_emr(key: data_keys.SourceSink, location: str) -> pd.DataFrame:
     map = {
-        data_keys.IHD.MI_ACUTE_DW: acute_mi_sequelae,
-        data_keys.IHD.MI_POST_DW: post_mi_sequelae,
-        data_keys.IHD.ANGINA_DW: angina_mi_sequelae,
+        data_keys.MI.EMR_ACUTE.sink: 24694,
+        data_keys.MI.EMR_POST.sink: 15755,
+        data_keys.ANGINA.EMR.sink: 1817,
+        data_keys.HF_IHD.EMR.sink: 2412,
     }
-    prevalence_disability_weights = get_prevalence_weighted_disability_weight(map[key], location)
-    ihd_prevalence = get_measure_wrapped(causes.ischemic_heart_disease, 'prevalence', location)
-    ihd_disability_weight = (sum(prevalence_disability_weights) / ihd_prevalence).fillna(0)
-    return ihd_disability_weight
+    return _load_em_from_meid(map[key.sink], 'Excess mortality rate', location)
 
 
-def load_ihd_emr(key: str, location: str) -> pd.DataFrame:
+def load_csmr_angina(key: str, location: str) -> pd.DataFrame:
+    # Maybe use later... For now use IHD cause_specific_mortality, which contains angina emr,
+    #   and make angina csmr be zero. The csmr is necessary to use the default SI model for angina
+    # csmr_angina = (load_ihd_prevalence(data_keys.IHD.ANGINA_PREV, location)
+    #               * load_ihd_emr(data_keys.IHD.ANGINA_EMR, location))
+    #
+    # This doesn't work -- can't query sequela for cause_specific_mortality_rate.
+    # ihd_seq, _ = get_ihd_sequelae()
+    # ang_seq = ihd_seq["angina"]
+    # ang_csmr = sum(get_measure_wrapped(s, 'cause_specific_mortality_rate', location) for s in ang_seq)
+    # return ang_csmr
+    draws = [f'draw_{i}' for i in range(1000)]
+    df_zeros = load_emr(data_keys.ANGINA.EMR, location)
+    df_zeros[draws] = 0.0
+    return df_zeros
+
+
+def load_dw_ihd(key: data_keys.SourceSink, location: str) -> pd.DataFrame:
     map = {
-        data_keys.IHD.MI_ACUTE_EMR: 24694,
-        data_keys.IHD.MI_POST_EMR: 15755,
-        data_keys.IHD.ANGINA_EMR: 1817,
+        data_keys.MI.DW_ACUTE.sink: "acute",
+        data_keys.MI.DW_POST.sink: "post",
+        data_keys.ANGINA.DW.sink: "angina",
+        data_keys.HF_IHD.DW.sink: "heart_failure"
     }
-    return _load_em_from_meid(map[key], 'Excess mortality rate', location)
+    seq, _ = get_ihd_sequelae()
+    term_1 = 1 / load_prevalence(seq[map[key.sink]], location)
+    term_2 = get_prevalence_weighted_disability_weight(seq[map[key.sink]], location)
+    return term_1 * sum(term_2)
 
 
 def get_ischemic_stroke_sequelae() ->  Tuple[pd.DataFrame, pd.DataFrame]:
@@ -269,21 +329,21 @@ def get_ischemic_stroke_sequelae() ->  Tuple[pd.DataFrame, pd.DataFrame]:
     return acute_sequelae, chronic_sequelae
 
 
-def load_ischemic_stroke_prevalence(key: str, location: str) -> pd.DataFrame:
+def load_prevalence_ischemic_stroke(key: str, location: str) -> pd.DataFrame:
     acute_sequelae, chronic_sequelae = get_ischemic_stroke_sequelae()
     map = {
-        data_keys.ISCHEMIC_STROKE.ACUTE_PREV: acute_sequelae,
-        data_keys.ISCHEMIC_STROKE.CHRONIC_PREV: chronic_sequelae
+        data_keys.ISCHEMIC_STROKE.PREVALENCE_ACUTE: acute_sequelae,
+        data_keys.ISCHEMIC_STROKE.PREVALENCE_CHRONIC: chronic_sequelae
     }
     prevalence = sum(get_measure_wrapped(s, 'prevalence', location) for s in map[key])
     return prevalence
 
 
-def load_ischemic_stroke_disability_weight(key: str, location: str) -> pd.DataFrame:
+def load_disability_weight_ischemic_stroke_(key: str, location: str) -> pd.DataFrame:
     acute_sequelae, chronic_sequelae = get_ischemic_stroke_sequelae()
     map = {
-        data_keys.ISCHEMIC_STROKE.ACUTE_DW: acute_sequelae,
-        data_keys.ISCHEMIC_STROKE.CHRONIC_DW: chronic_sequelae
+        data_keys.ISCHEMIC_STROKE.DW_ACUTE: acute_sequelae,
+        data_keys.ISCHEMIC_STROKE.DW_CHRONIC: chronic_sequelae
     }
     prevalence_disability_weights = get_prevalence_weighted_disability_weight(map[key], location)
     ischemic_stroke_prevalence = get_measure_wrapped(causes.ischemic_stroke, 'prevalence', location)
@@ -291,10 +351,10 @@ def load_ischemic_stroke_disability_weight(key: str, location: str) -> pd.DataFr
     return ischemic_stroke_disability_weight
 
 
-def load_ischemic_stroke_emr(key: str, location: str) -> pd.DataFrame:
+def load_emr_ischemic_stroke(key: str, location: str) -> pd.DataFrame:
     map = {
-        data_keys.ISCHEMIC_STROKE.ACUTE_EMR: 24714,
-        data_keys.ISCHEMIC_STROKE.CHRONIC_EMR: 10837,
+        data_keys.ISCHEMIC_STROKE.EMR_ACUTE: 24714,
+        data_keys.ISCHEMIC_STROKE.EMR_CHRONIC: 10837,
     }
     return _load_em_from_meid(map[key], 'Excess mortality rate', location)
 
@@ -337,15 +397,15 @@ def modify_rr_affected_entity(art: Artifact, risk_key: str, mod_map: Dict[str, L
 
 
 def handle_special_cases(artifact: Artifact, location: str):
-    artifact.write(data_keys.IHD.RESTRICTIONS_ANGINA, artifact.load(data_keys.IHD.RESTRICTIONS))
+    # artifact.write(data_keys.ANGINA.RESTRICTIONS_ANGINA, artifact.load(data_keys.MI.RESTRICTIONS))
     # Maybe use later... For now use IHD cause_specific_mortality, which contains angina emr,
     #   and make angina csmr be zero. The csmr is necessary to use the default SI model for angina
     # csmr_angina = (load_ihd_prevalence(data_keys.IHD.ANGINA_PREV, location)
     #               * load_ihd_emr(data_keys.IHD.ANGINA_EMR, location))
-    draws = [f'draw_{i}' for i in range(1000)]
-    df_zeros = load_ihd_emr(data_keys.IHD.ANGINA_EMR, location)
-    df_zeros[draws] = 0.0
-    artifact.write(data_keys.IHD.CSMR_ANGINA, df_zeros)
+    # draws = [f'draw_{i}' for i in range(1000)]
+    # df_zeros = load_emr(data_keys.ANGINA.ANGINA_EMR, location)
+    # df_zeros[draws] = 0.0
+    # artifact.write(data_keys.ANGINA.CSMR_ANGINA, df_zeros)
 
 
     # Need to make RR data match causes in the model

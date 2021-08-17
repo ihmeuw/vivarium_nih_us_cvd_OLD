@@ -10,6 +10,7 @@ Some degree of verbosity/boilerplate is fine in the interest of transparancy.
 
 """
 from pathlib import Path
+from typing import Union
 
 from loguru import logger
 import pandas as pd
@@ -48,7 +49,7 @@ def open_artifact(output_path: Path, location: str) -> Artifact:
     return artifact
 
 
-def load_and_write_data(artifact: Artifact, key: str, location: str):
+def load_and_write_data(artifact: Artifact, key: Union[str, data_keys.SourceSink], location: str):
     """Loads data and writes it to the artifact if not already present.
 
     Parameters
@@ -62,59 +63,20 @@ def load_and_write_data(artifact: Artifact, key: str, location: str):
         write to.
 
     """
-    if key in artifact:
-        logger.debug(f'Data for {key} already in artifact.  Skipping...')
+    if isinstance(key, data_keys.SourceSink):
+        source = key.source
+        sink = key.sink
     else:
-        logger.debug(f'Loading data for {key} for location {location}.')
+        source = sink = key
+
+    if sink in artifact:
+        logger.debug(f'Data for {sink} already in artifact.  Skipping...')
+    else:
+        logger.debug(f'Loading data for {source} for location {location}.')
         data = loader.get_data(key, location)
-        logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
-    return artifact.load(key)
-
-
-def write_data(artifact: Artifact, key: str, data: pd.DataFrame):
-    """Writes data to the artifact if not already present.
-
-    Parameters
-    ----------
-    artifact
-        The artifact to write to.
-    key
-        The entity key associated with the data to write.
-    data
-        The data to write.
-
-    """
-    if key in artifact:
-        logger.debug(f'Data for {key} already in artifact.  Skipping...')
-    else:
-        logger.debug(f'Writing data for {key} to artifact.')
-        artifact.write(key, data)
-    return artifact.load(key)
-
-# TODO - writing and reading by draw is necessary if you are using
-#        LBWSG data. Find the read function in utilities.py
-def write_data_by_draw(artifact: Artifact, key: str, data: pd.DataFrame):
-    """Writes data to the artifact on a per-draw basis. This is useful
-    for large datasets like Low Birthweight Short Gestation (LBWSG).
-
-    Parameters
-    ----------
-    artifact
-        The artifact to write to.
-    key
-        The entity key associated with the data to write.
-    data
-        The data to write.
-
-    """
-    with pd.HDFStore(artifact.path, complevel=9, mode='a') as store:
-        key = EntityKey(key)
-        artifact._keys.append(key)
-        store.put(f'{key.path}/index', data.index.to_frame(index=False))
-        data = data.reset_index(drop=True)
-        for c in data.columns:
-            store.put(f'{key.path}/{c}', data[c])
+        logger.debug(f'Writing data for {source} to artifact at location {sink}.')
+        artifact.write(sink, data)
+    return artifact.load(sink)
 
 
 def handle_special_cases(artifact: Artifact, location: str):

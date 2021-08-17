@@ -1,7 +1,7 @@
 import itertools
 
 from vivarium_nih_us_cvd.constants import models
-from vivarium_nih_us_cvd.constants.data_keys import IHD, ISCHEMIC_STROKE
+from vivarium_nih_us_cvd.constants.data_keys import MI, ISCHEMIC_STROKE
 
 #################################
 # Results columns and variables #
