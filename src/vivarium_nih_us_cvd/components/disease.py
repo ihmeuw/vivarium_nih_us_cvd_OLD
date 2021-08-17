@@ -12,26 +12,26 @@ if typing.TYPE_CHECKING:
     from vivarium.framework.event import Event
 
 
-def IschemicHeartDisease():
-    susceptible = SusceptibleState(models.IHD_MODEL_NAME)
+def MyocardialInfarction():
+    susceptible = SusceptibleState(models.MI_MODEL_NAME)
     data_funcs = {'dwell_time': lambda *args: pd.Timedelta(days=28)}
     acute_mi = DiseaseState(models.ACUTE_MI_STATE_NAME, cause_type='cause', get_data_functions=data_funcs)
     post_mi = DiseaseState(models.POST_MI_STATE_NAME, cause_type='cause',)
 
     susceptible.allow_self_transitions()
     data_funcs = {
-        'incidence_rate': lambda _, builder: builder.data.load(data_keys.IHD.MI_ACUTE_INCIDENCE),
+        'incidence_rate': lambda _, builder: builder.data.load(data_keys.MI.INCIDENCE_ACUTE.sink),
     }
     susceptible.add_transition(acute_mi, source_data_type='rate', get_data_functions=data_funcs)
     acute_mi.allow_self_transitions()
     acute_mi.add_transition(post_mi)
     post_mi.allow_self_transitions()
     data_funcs = {
-        'transition_rate': lambda builder, *_: builder.data.load(data_keys.IHD.MI_POST_INCIDENCE),
+        'transition_rate': lambda builder, *_: builder.data.load(data_keys.MI.INCIDENCE_POST.sink),
     }
     post_mi.add_transition(acute_mi, source_data_type='rate', get_data_functions=data_funcs)
 
-    return DiseaseModel(models.IHD_MODEL_NAME, states=[susceptible, acute_mi, post_mi])
+    return DiseaseModel(models.MI_MODEL_NAME, states=[susceptible, acute_mi, post_mi])
 
 
 def IschemicStroke():
@@ -42,14 +42,14 @@ def IschemicStroke():
 
     susceptible.allow_self_transitions()
     data_funcs = {
-        'incidence_rate': lambda _, builder: builder.data.load(data_keys.ISCHEMIC_STROKE.ACUTE_INCIDENCE)
+        'incidence_rate': lambda _, builder: builder.data.load(data_keys.ISCHEMIC_STROKE.INCIDENCE_ACUTE)
     }
     susceptible.add_transition(acute_stroke, source_data_type='rate', get_data_functions=data_funcs)
     acute_stroke.allow_self_transitions()
     acute_stroke.add_transition(chronic_stroke)
     chronic_stroke.allow_self_transitions()
     data_funcs = {
-        'transition_rate': lambda builder, *_: builder.data.load(data_keys.ISCHEMIC_STROKE.ACUTE_INCIDENCE)
+        'transition_rate': lambda builder, *_: builder.data.load(data_keys.ISCHEMIC_STROKE.INCIDENCE_ACUTE)
     }
     chronic_stroke.add_transition(acute_stroke, source_data_type='rate', get_data_functions=data_funcs)
 

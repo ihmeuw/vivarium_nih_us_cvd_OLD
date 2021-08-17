@@ -48,7 +48,7 @@ class ResultsStratifier:
         self.fpg = builder.value.get_value('high_fasting_plasma_glucose.exposure')
         self.bmi = builder.value.get_value('high_body_mass_index_in_adults.exposure')
 
-        columns_required = [models.IHD_MODEL_NAME,
+        columns_required = [models.MI_MODEL_NAME,
                             models.ISCHEMIC_STROKE_MODEL_NAME]
         self.population_view = builder.population.get_view(columns_required)
         self.risk_groups = None

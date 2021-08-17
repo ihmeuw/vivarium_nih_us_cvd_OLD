@@ -2,6 +2,12 @@ from typing import NamedTuple
 
 from vivarium_nih_us_cvd.constants import models as mod
 
+
+class SourceSink(NamedTuple):
+    source: str
+    sink: str
+
+
 #############
 # Data Keys #
 #############
@@ -29,54 +35,134 @@ class __Population(NamedTuple):
 POPULATION = __Population()
 
 
-class __IHD(NamedTuple):
-    CSMR: str = f'cause.{mod.IHD_MODEL_NAME}.cause_specific_mortality_rate'
-    RESTRICTIONS: str = f'cause.{mod.IHD_MODEL_NAME}.restrictions'
-    # Note non-colon construction
-    CSMR_ANGINA = f'cause.{mod.ANGINA_MODEL_NAME}.cause_specific_mortality_rate'
-    RESTRICTIONS_ANGINA = f'cause.{mod.ANGINA_MODEL_NAME}.restrictions'
-
-    MI_ACUTE_PREV: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.prevalence' 
-    MI_POST_PREV: str = f'cause.{mod.POST_MI_STATE_NAME}.prevalence' 
-    ANGINA_PREV: str = f'cause.{mod.ANGINA_MODEL_NAME}.prevalence'
-
-    MI_ACUTE_INCIDENCE: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.incidence_rate' 
-    MI_POST_INCIDENCE: str = f'cause.{mod.POST_MI_STATE_NAME}.incidence_rate' 
-    ANGINA_INCIDENCE: str = f'cause.{mod.ANGINA_MODEL_NAME}.incidence_rate'
-
-    MI_ACUTE_EMR: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.excess_mortality_rate'
-    MI_POST_EMR: str = f'cause.{mod.POST_MI_STATE_NAME}.excess_mortality_rate'
-    ANGINA_EMR: str = f'cause.{mod.ANGINA_MODEL_NAME}.excess_mortality_rate'
-
-    MI_ACUTE_DW: str = f'cause.{mod.ACUTE_MI_STATE_NAME}.disability_weight'
-    MI_POST_DW: str = f'cause.{mod.POST_MI_STATE_NAME}.disability_weight'
-    ANGINA_DW: str = f'cause.{mod.ANGINA_MODEL_NAME}.disability_weight'
+class __MI(NamedTuple):
+    CSMR: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.cause_specific_mortality_rate',
+        f'cause.{mod.MI_MODEL_NAME}.cause_specific_mortality_rate',
+    )
+    RESTRICTIONS: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.restrictions', f'cause.{mod.MI_MODEL_NAME}.restrictions'
+    )
+    PREVALENCE_ACUTE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.prevalence', f'cause.{mod.ACUTE_MI_STATE_NAME}.prevalence'
+    )
+    PREVALENCE_POST: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.prevalence', f'cause.{mod.POST_MI_STATE_NAME}.prevalence'
+    )
+    INCIDENCE_ACUTE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.incidence_rate', f'cause.{mod.ACUTE_MI_STATE_NAME}.incidence_rate'
+    )
+    INCIDENCE_POST: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.incidence_rate', f'cause.{mod.POST_MI_STATE_NAME}.incidence_rate'
+    )
+    EMR_ACUTE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.excess_mortality_rate',
+        f'cause.{mod.ACUTE_MI_STATE_NAME}.excess_mortality_rate',
+    )
+    EMR_POST: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.excess_mortality_rate',
+        f'cause.{mod.POST_MI_STATE_NAME}.excess_mortality_rate',
+    )
+    DW_ACUTE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.disability_weight', f'cause.{mod.ACUTE_MI_STATE_NAME}.disability_weight'
+    )
+    DW_POST: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.disability_weight', f'cause.{mod.POST_MI_STATE_NAME}.disability_weight'
+    )
 
     @property
     def name(self):
-        return mod.IHD_MODEL_NAME
+        return mod.MI_MODEL_NAME
 
     @property
     def log_name(self):
         return self.name.replace('_', ' ')
 
 
-IHD = __IHD()
+MI = __MI()
+
+
+class __ANGINA(NamedTuple):
+    CSMR: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.cause_specific_mortality_rate',
+        f'cause.{mod.ANGINA_MODEL_NAME}.cause_specific_mortality_rate',
+    )
+    RESTRICTIONS: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.restrictions', f'cause.{mod.ANGINA_MODEL_NAME}.restrictions'
+    )
+    PREVALENCE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.prevalence', f'cause.{mod.ANGINA_MODEL_NAME}.prevalence'
+    )
+    INCIDENCE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.incidence_rate', f'cause.{mod.ANGINA_MODEL_NAME}.incidence_rate'
+    )
+    EMR: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.excess_mortality_rate',
+        f'cause.{mod.ANGINA_MODEL_NAME}.excess_mortality_rate',
+    )
+    DW: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.disability_weight', f'cause.{mod.ANGINA_MODEL_NAME}.disability_weight'
+    )
+
+    @property
+    def name(self):
+        return mod.ANGINA_MODEL_NAME
+
+    @property
+    def log_name(self):
+        return self.name.replace('_', ' ')
+
+
+ANGINA = __ANGINA()
+
+
+class __HF_IHD(NamedTuple):
+    CSMR: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.cause_specific_mortality_rate',
+        f'cause.{mod.HF_IHD_MODEL_NAME}.cause_specific_mortality_rate',
+    )
+    RESTRICTIONS: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.restrictions', f'cause.{mod.HF_IHD_MODEL_NAME}.restrictions'
+    )
+    PREVALENCE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.prevalence', f'cause.{mod.HF_IHD_MODEL_NAME}.prevalence'
+    )
+    INCIDENCE: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.incidence_rate', f'cause.{mod.HF_IHD_MODEL_NAME}.incidence_rate'
+    )
+    EMR: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.excess_mortality_rate',
+        f'cause.{mod.HF_IHD_MODEL_NAME}.excess_mortality_rate',
+    )
+    DW: SourceSink = SourceSink(
+        'cause.ischemic_heart_disease.disability_weight', f'cause.{mod.HF_IHD_MODEL_NAME}.disability_weight'
+    )
+
+    @property
+    def name(self):
+        return mod.HF_IHD_MODEL_NAME
+
+    @property
+    def log_name(self):
+        return self.name.replace('_', ' ')
+
+
+HF_IHD = __HF_IHD()
 
 
 class __IschemicStroke(NamedTuple):
     CSMR: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.cause_specific_mortality_rate'
     RESTRICTIONS: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.restrictions'
-    ACUTE_INCIDENCE: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.incidence_rate'
+    INCIDENCE_ACUTE: str = f'cause.{mod.ISCHEMIC_STROKE_MODEL_NAME}.incidence_rate'
 
-    ACUTE_PREV: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.prevalence' 
-    CHRONIC_PREV: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.prevalence'
+    PREVALENCE_ACUTE: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.prevalence'
+    PREVALENCE_CHRONIC: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.prevalence'
 
-    ACUTE_EMR: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.excess_mortality_rate'
-    CHRONIC_EMR: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.excess_mortality_rate'
+    EMR_ACUTE: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.excess_mortality_rate'
+    EMR_CHRONIC: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.excess_mortality_rate'
 
-    ACUTE_DW: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.disability_weight'
-    CHRONIC_DW: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.disability_weight'
+    DW_ACUTE: str = f'sequela.{mod.ACUTE_ISCHEMIC_STROKE_STATE_NAME}.disability_weight'
+    DW_CHRONIC: str = f'sequela.{mod.CHRONIC_ISCHEMIC_STROKE_STATE_NAME}.disability_weight'
 
     @property
     def name(self):
@@ -94,7 +180,7 @@ class __PeripheralArterialDisease(NamedTuple):
     CSMR: str = f'cause.{mod.PAD_MODEL_NAME}.cause_specific_mortality_rate'
     RESTRICTIONS: str = f'cause.{mod.PAD_MODEL_NAME}.restrictions'
     INCIDENCE: str = f'cause.{mod.PAD_MODEL_NAME}.incidence_rate'
-    PREVALENCE: str = f'cause.{mod.PAD_MODEL_NAME}.prevalence' 
+    PREVALENCE: str = f'cause.{mod.PAD_MODEL_NAME}.prevalence'
     EMR: str = f'cause.{mod.PAD_MODEL_NAME}.excess_mortality_rate'
     DW: str = f'cause.{mod.PAD_MODEL_NAME}.disability_weight'
 
@@ -114,7 +200,7 @@ class __AtrialFibrillation(NamedTuple):
     CSMR: str = f'cause.{mod.AFIB_MODEL_NAME}.cause_specific_mortality_rate'
     RESTRICTIONS: str = f'cause.{mod.AFIB_MODEL_NAME}.restrictions'
     INCIDENCE: str = f'cause.{mod.AFIB_MODEL_NAME}.incidence_rate'
-    PREVALENCE: str = f'cause.{mod.AFIB_MODEL_NAME}.prevalence' 
+    PREVALENCE: str = f'cause.{mod.AFIB_MODEL_NAME}.prevalence'
     EMR: str = f'cause.{mod.AFIB_MODEL_NAME}.excess_mortality_rate'
     DW: str = f'cause.{mod.AFIB_MODEL_NAME}.disability_weight'
 
@@ -128,7 +214,6 @@ class __AtrialFibrillation(NamedTuple):
 
 
 AFIB = __AtrialFibrillation()
-
 
 
 class __HighLDLCholesterol(NamedTuple):
@@ -221,11 +306,11 @@ class __BMI(NamedTuple):
 BMI = __BMI()
 
 
-
-
 MAKE_ARTIFACT_KEY_GROUPS = [
     POPULATION,
-    IHD,
+    MI,
+    ANGINA,
+    HF_IHD,
     ISCHEMIC_STROKE,
     PAD,
     AFIB,
