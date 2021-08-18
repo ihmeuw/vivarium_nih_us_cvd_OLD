@@ -410,7 +410,7 @@ def handle_special_cases(artifact: Artifact, location: str):
 
     # Need to make RR data match causes in the model
     map = {
-        'ischemic_heart_disease': ['acute_myocardial_infarction', 'post_myocardial_infarction_to_acute_myocardial_infarction'],
+        'ischemic_heart_disease': ['acute_myocardial_infarction', 'post_myocardial_infarction_to_acute_myocardial_infarction', 'heart_failure_from_ihd'],
         models.ISCHEMIC_STROKE_MODEL_NAME: ['acute_ischemic_stroke', 'chronic_ischemic_stroke_to_acute_ischemic_stroke'],
     }
     for key in [
