@@ -5,6 +5,7 @@ components:
             - Mortality()
         disease:
             - SI("angina")
+            - SI("heart_failure_from_ihd")
         risks:
             - Risk('risk_factor.high_ldl_cholesterol')
             - RiskEffect('risk_factor.high_ldl_cholesterol', 'cause.acute_myocardial_infarction.incidence_rate')
@@ -31,11 +32,12 @@ components:
             - MortalityObserver()
             
     vivarium_nih_us_cvd.components:
-        - IschemicHeartDisease()
+        - MyocardialInfarction()
         - IschemicStroke()
-        - DiseaseObserver("ischemic_heart_disease")
+        - DiseaseObserver("myocardial_infarction")
         - DiseaseObserver("ischemic_stroke")
         - DiseaseObserver("angina")
+        - DiseaseObserver("heart_failure_from_ihd")
 
 configuration:
     input_data:

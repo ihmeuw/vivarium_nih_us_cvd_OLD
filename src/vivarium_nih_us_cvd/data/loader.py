@@ -21,7 +21,7 @@ from vivarium.framework.artifact.artifact import Artifact
 from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
-from vivarium_nih_us_cvd.constants import data_keys
+from vivarium_nih_us_cvd.constants import data_keys, models
 
 
 def get_measure_wrapped(entity: ModelableEntity, key: Union[str, data_keys.SourceSink], location: str) -> pd.DataFrame:
@@ -411,7 +411,7 @@ def handle_special_cases(artifact: Artifact, location: str):
     # Need to make RR data match causes in the model
     map = {
         'ischemic_heart_disease': ['acute_myocardial_infarction', 'post_myocardial_infarction_to_acute_myocardial_infarction'],
-        'ischemic_stroke': ['acute_ischemic_stroke', 'chronic_ischemic_stroke_to_acute_ischemic_stroke'],
+        models.ISCHEMIC_STROKE_MODEL_NAME: ['acute_ischemic_stroke', 'chronic_ischemic_stroke_to_acute_ischemic_stroke'],
     }
     for key in [
         data_keys.LDL_C.RELATIVE_RISK,
