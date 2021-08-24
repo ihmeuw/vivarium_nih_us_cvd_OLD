@@ -22,6 +22,7 @@ from vivarium_gbd_access import gbd
 from vivarium_inputs import globals as vi_globals, interface, utilities as vi_utils, utility_data
 from vivarium_inputs.mapping_extension import alternative_risk_factors
 from vivarium_nih_us_cvd.constants import data_keys, models
+from vivarium_nih_us_cvd.paths import HD_PROPDATA_PATH
 
 
 def get_measure_wrapped(entity: ModelableEntity, key: Union[str, data_keys.SourceSink], location: str) -> pd.DataFrame:
@@ -29,7 +30,11 @@ def get_measure_wrapped(entity: ModelableEntity, key: Union[str, data_keys.Sourc
     All calls to get_measure() need to have the location dropped. For the time being,
     simply use this function.
     '''
-    return interface.get_measure(entity, key, location).droplevel('location')
+    return (interface.get_measure(entity, key, location)
+            .droplevel('location')
+            .reset_index()
+            .query('year_start==2019')
+            .set_index(['sex', 'age_start', 'age_end', 'year_start', 'year_end']))
 
 
 def get_key(val: Union[str, data_keys.SourceSink]):
@@ -396,18 +401,7 @@ def modify_rr_affected_entity(art: Artifact, risk_key: str, mod_map: Dict[str, L
     art.replace(risk_key, df)
 
 
-def handle_special_cases(artifact: Artifact, location: str):
-    # artifact.write(data_keys.ANGINA.RESTRICTIONS_ANGINA, artifact.load(data_keys.MI.RESTRICTIONS))
-    # Maybe use later... For now use IHD cause_specific_mortality, which contains angina emr,
-    #   and make angina csmr be zero. The csmr is necessary to use the default SI model for angina
-    # csmr_angina = (load_ihd_prevalence(data_keys.IHD.ANGINA_PREV, location)
-    #               * load_ihd_emr(data_keys.IHD.ANGINA_EMR, location))
-    # draws = [f'draw_{i}' for i in range(1000)]
-    # df_zeros = load_emr(data_keys.ANGINA.ANGINA_EMR, location)
-    # df_zeros[draws] = 0.0
-    # artifact.write(data_keys.ANGINA.CSMR_ANGINA, df_zeros)
-
-
+def match_rr_to_cause_name(artifact: Artifact):
     # Need to make RR data match causes in the model
     map = {
         'ischemic_heart_disease': ['acute_myocardial_infarction', 'post_myocardial_infarction_to_acute_myocardial_infarction', 'heart_failure_from_ihd'],
@@ -425,8 +419,81 @@ def handle_special_cases(artifact: Artifact, location: str):
     ]:
         modify_rr_affected_entity(artifact, key, map)
 
+
+def use_correct_fpg_name(artifact: Artifact):
     artifact.write(data_keys.FPG.TMRED_LOCAL, artifact.load(data_keys.FPG.TMRED))
     artifact.write(data_keys.FPG.RELATIVE_RISK_SCALAR_LOCAL, artifact.load(data_keys.FPG.RELATIVE_RISK_SCALAR))
+
+
+def modify_hd_incidence(artifact: Artifact, location: str) -> None:
+    tmp_df = pd.read_csv(HD_PROPDATA_PATH)
+    # Produces:
+    #      sex_id  age_group_id sim_cause  proportion
+    # 0         1             2  residual    1.000000
+    # 1         1             3  residual    1.000000
+    # ...
+    df_prop_data = (tmp_df.drop(['Unnamed: 0','year_start','year_end', 'location_id'], axis=1)
+            .query(f'location_name=="{location}"')
+            .drop(['location_name'], axis=1)
+            .reset_index(drop=True))
+    # Remove unused ages
+    df_prop_data = df_prop_data[~df_prop_data.age_group_id.isin([2,3,6,7,8,9,34,238,388])].reset_index(drop=True)
+    modify_components(artifact, df_prop_data)
+
+
+def modify_components(artifact: Artifact, df_props: pd.DataFrame) -> None:
+
+    def do_mult(s, multiplier):
+        # maps age_start -> age_id
+        map = {
+            25: 10,
+            30: 11,
+            35: 12,
+            40: 13,
+            45: 14,
+            50: 15,
+            55: 16,
+            60: 17,
+            65: 18,
+            70: 19,
+            75: 20,
+            80: 30,
+            85: 31,
+            90: 32,
+            95: 235,
+        }
+        draws = [f'draw_{i}' for i in range(1000)]
+        key = (1 if 'Male' == s.sex else 2, map[int(s.age_start)])
+        return s[draws] * float(multiplier.get_group(key).proportion.values)
+
+    map = {
+        data_keys.HF_IHD: 'residual',
+        # TODO: still coming...
+        # data_keys.: 'hhd',
+        # data_keys.: 'ihd',
+        # data_keys.: 'copd'
+    }
+    for key in map.keys():
+        prop_type = map[key]
+        draws = [f'draw_{i}' for i in range(1000)]
+        # get data as it came from GBD and flatten
+        existing_data = artifact.load(key.INCIDENCE.sink).reset_index()
+        # get an index for the rows we care about
+        apply_idx = existing_data[(existing_data.age_start > 20) & (existing_data.year_start == 2019)].index
+        # create a groupby object that is germane to this proportion type
+        prop_info = df_props.query(f'sim_cause=="{prop_type}"').groupby(['sex_id', 'age_group_id'])
+        # target the rows and columns to be modified and modify by row
+        existing_data.loc[apply_idx, draws] = existing_data.loc[apply_idx].apply(do_mult, args=([prop_info]), axis=1)
+        # restore the canonical form
+        modified_data = existing_data.set_index(['sex', 'age_start', 'age_end', 'year_start', 'year_end'])
+        # replace the old data with the new data
+        artifact.replace(key.INCIDENCE.sink, modified_data)
+
+
+def handle_special_cases(artifact: Artifact, location: str) -> None:
+    match_rr_to_cause_name(artifact)
+    use_correct_fpg_name(artifact)
+    modify_hd_incidence(artifact, location)
 
 
 def get_entity(key: str):
