@@ -38,7 +38,7 @@ COLUMN_TEMPLATES = {
     'deaths': DEATH_COLUMN_TEMPLATE,
     'ylls': YLLS_COLUMN_TEMPLATE,
     'ylds': YLDS_COLUMN_TEMPLATE,
-    'state_person_time': STATE_PERSON_TIME_COLUMN_TEMPLATE,
+    '_person_time': STATE_PERSON_TIME_COLUMN_TEMPLATE,
     'transition_count': TRANSITION_COUNT_COLUMN_TEMPLATE,
 }
 

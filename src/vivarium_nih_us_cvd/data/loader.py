@@ -30,11 +30,7 @@ def get_measure_wrapped(entity: ModelableEntity, key: Union[str, data_keys.Sourc
     All calls to get_measure() need to have the location dropped. For the time being,
     simply use this function.
     '''
-    return (interface.get_measure(entity, key, location)
-            .droplevel('location')
-            .reset_index()
-            .query('year_start==2019')
-            .set_index(['sex', 'age_start', 'age_end', 'year_start', 'year_end']))
+    return interface.get_measure(entity, key, location).droplevel('location')
 
 
 def get_key(val: Union[str, data_keys.SourceSink]):
