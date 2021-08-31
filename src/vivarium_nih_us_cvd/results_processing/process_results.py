@@ -1,5 +1,6 @@
 from pathlib import Path
 from typing import NamedTuple, List
+from loguru import logger
 
 import pandas as pd
 import yaml
@@ -138,9 +139,19 @@ def get_population_data(data):
 
 
 def get_measure_data(data, measure):
-    data = pivot_data(data[results.RESULT_COLUMNS(measure) + GROUPBY_COLUMNS])
-    data = split_processing_column(data)
-    return sort_data(data)
+    index = results.RESULT_COLUMNS(measure) + GROUPBY_COLUMNS
+    if len(set(index)) == len(set(index).intersection(set(data.columns))):
+        data = data[index]
+        data = pivot_data(data)
+        data = split_processing_column(data)
+        return sort_data(data)
+    else:
+        measure_columns = [k for k in data.columns if measure in k]
+        compare = [f'\nIndex str  = {pair[0]}\nResult str = {pair[1]}\n' for pair in zip(index[:5], measure_columns[:5])]
+        logger.error(f'Error: measure data does not match result data. Here are a few examples:')
+        for i in compare:
+            logger.error(i)
+        data[list(set(index).difference(set(data.columns)))[:5]]
 
 
 def get_by_cause_measure_data(data, measure):
@@ -150,7 +161,7 @@ def get_by_cause_measure_data(data, measure):
 
 
 def get_state_person_time_measure_data(data):
-    data = get_measure_data(data, 'state_person_time')
+    data = get_measure_data(data, '_person_time')
     data['measure'], data['cause'] = 'state_person_time', data.measure.str.split('_person_time').str[0]
     data['age'], data['tmp'] = data.age.str.split('_SBP_').str
     data['SBP'], data['tmp'] = data.tmp.str.split('_LDL_').str

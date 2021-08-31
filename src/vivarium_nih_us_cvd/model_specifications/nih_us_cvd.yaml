@@ -92,3 +92,11 @@ configuration:
             by_age: True
             by_sex: True
             by_year: True
+        myocardial_infarction_observer:
+            by_age: True
+            by_sex: True
+            by_year: True
+        heart_failure_from_ihd_observer:
+            by_age: True
+            by_sex: True
+            by_year: True
