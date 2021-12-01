@@ -37,8 +37,8 @@ def make_measure_data(data):
         ylds=get_by_cause_measure_data(data, 'ylds'),
         deaths=get_by_cause_measure_data(data, 'deaths'),
         # TODO duplicate for each model
-        disease_state_person_time=get_state_person_time_measure_data(data, 'disease_state_person_time'),
-        disease_transition_count=get_transition_count_measure_data(data, 'disease_transition_count'),
+        state_person_time=get_state_person_time_measure_data(data, 'state_person_time'),
+        transition_count=get_transition_count_measure_data(data, 'transition_count'),
     )
     return measure_data
 
