@@ -50,8 +50,8 @@ class MeasureData(NamedTuple):
     ylds: pd.DataFrame
     deaths: pd.DataFrame
     # TODO duplicate for each model
-    disease_state_person_time: pd.DataFrame
-    disease_transition_count: pd.DataFrame
+    state_person_time: pd.DataFrame
+    transition_count: pd.DataFrame
 
     def dump(self, output_dir: Path):
         for key, df in self._asdict().items():
