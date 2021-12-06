@@ -1,8 +1,9 @@
+import itertools
 from pathlib import Path
 from typing import NamedTuple, List
-from loguru import logger
 
 import pandas as pd
+from loguru import logger
 import yaml
 
 from vivarium_nih_us_cvd.constants import results
@@ -14,7 +15,7 @@ GROUPBY_COLUMNS = [
     SCENARIO_COLUMN
 ]
 OUTPUT_COLUMN_SORT_ORDER = [
-    'age',
+    'age_group',
     'sex',
     'year',
     'risk',
@@ -22,6 +23,10 @@ OUTPUT_COLUMN_SORT_ORDER = [
     'measure',
     'input_draw'
 ]
+RENAME_COLUMNS = {
+    'age_group': 'age',
+    'cause_of_death': 'cause',
+}
 
 
 def make_measure_data(data):
@@ -32,8 +37,8 @@ def make_measure_data(data):
         ylds=get_by_cause_measure_data(data, 'ylds'),
         deaths=get_by_cause_measure_data(data, 'deaths'),
         # TODO duplicate for each model
-        disease_state_person_time=get_state_person_time_measure_data(data),
-        disease_transition_count=get_transition_count_measure_data(data),
+        state_person_time=get_state_person_time_measure_data(data, 'state_person_time'),
+        transition_count=get_transition_count_measure_data(data, 'transition_count'),
     )
     return measure_data
 
@@ -45,8 +50,8 @@ class MeasureData(NamedTuple):
     ylds: pd.DataFrame
     deaths: pd.DataFrame
     # TODO duplicate for each model
-    disease_state_person_time: pd.DataFrame
-    disease_transition_count: pd.DataFrame
+    state_person_time: pd.DataFrame
+    transition_count: pd.DataFrame
 
     def dump(self, output_dir: Path):
         for key, df in self._asdict().items():
@@ -111,71 +116,52 @@ def pivot_data(data):
             .set_index(GROUPBY_COLUMNS)
             .stack()
             .reset_index()
-            .rename(columns={f'level_{len(GROUPBY_COLUMNS)}': 'process', 0: 'value'}))
+            .rename(columns={f'level_{len(GROUPBY_COLUMNS)}': 'key', 0: 'value'}))
 
 
 def sort_data(data):
     sort_order = [c for c in OUTPUT_COLUMN_SORT_ORDER if c in data.columns]
-    other_cols = [c for c in data.columns if c not in sort_order]
-    data = data[sort_order + other_cols].sort_values(sort_order)
+    other_cols = [c for c in data.columns if c not in sort_order and c != 'value']
+    data = data[sort_order + other_cols + ['value']].sort_values(sort_order)
     return data.reset_index(drop=True)
 
 
-def split_processing_column(data):
-    # TODO the required splitting here is dependant on what types of stratification exist in the model
-    data['process'], data['age'] = data.process.str.split('_in_age_group_').str
-    data['process'], data['sex'] = data.process.str.split('_among_').str
-    data['year'] = data.process.str.split('_in_').str[-1]
-    data['measure'] = data.process.str.split('_in_').str[:-1].apply(lambda x: '_in_'.join(x))
-    return data.drop(columns='process')
+def apply_results_map(data, kind):
+    logger.info(f"Mapping {kind} data to stratifications.")
+    map_df = results.RESULTS_MAP(kind)
+    data = data.set_index('key')
+    data = data.join(map_df).reset_index(drop=True)
+    data = data.rename(columns=RENAME_COLUMNS)
+    logger.info(f"Mapping {kind} complete.")
+    return data
 
 
 def get_population_data(data):
     total_pop = pivot_data(data[[results.TOTAL_POPULATION_COLUMN]
                                 + results.RESULT_COLUMNS('population')
                                 + GROUPBY_COLUMNS])
-    total_pop = total_pop.rename(columns={'process': 'measure'})
+    total_pop = total_pop.rename(columns={'key': 'measure'})
     return sort_data(total_pop)
 
 
 def get_measure_data(data, measure):
-    index = results.RESULT_COLUMNS(measure) + GROUPBY_COLUMNS
-    if len(set(index)) == len(set(index).intersection(set(data.columns))):
-        data = data[index]
-        data = pivot_data(data)
-        data = split_processing_column(data)
-        return sort_data(data)
-    else:
-        measure_columns = [k for k in data.columns if measure in k]
-        compare = [f'\nIndex str  = {pair[0]}\nResult str = {pair[1]}\n' for pair in zip(index[:5], measure_columns[:5])]
-        logger.error(f'Error: measure data does not match result data. Here are a few examples:')
-        for i in compare:
-            logger.error(i)
-        data[list(set(index).difference(set(data.columns)))[:5]]
+    data = pivot_data(data[results.RESULT_COLUMNS(measure) + GROUPBY_COLUMNS])
+    data = apply_results_map(data, measure)
+    return sort_data(data)
 
 
 def get_by_cause_measure_data(data, measure):
     data = get_measure_data(data, measure)
-    data['measure'], data['cause'] = data.measure.str.split('_due_to_').str
     return sort_data(data)
 
 
-def get_state_person_time_measure_data(data):
-    data = get_measure_data(data, '_person_time')
-    data['measure'], data['cause'] = 'state_person_time', data.measure.str.split('_person_time').str[0]
-    data['age'], data['tmp'] = data.age.str.split('_SBP_').str
-    data['SBP'], data['tmp'] = data.tmp.str.split('_LDL_').str
-    data['LDL'], data['tmp'] = data.tmp.str.split('_FPG_').str
-    data['FPG'], data['tmp'] = data.tmp.str.split('_BMI_').str
-    data['BMI'] = data.tmp
-    return sort_data(data.drop(columns='tmp'))
+def get_state_person_time_measure_data(data, measure):
+    data = get_measure_data(data, measure)
+    return sort_data(data)
 
 
-def get_transition_count_measure_data(data):
-    data = get_measure_data(data, 'transition_count')
-    data['age'], data['tmp'] = data.age.str.split('_SBP_').str
-    data['SBP'], data['tmp'] = data.tmp.str.split('_LDL_').str
-    data['LDL'], data['tmp'] = data.tmp.str.split('_FPG_').str
-    data['FPG'], data['tmp'] = data.tmp.str.split('_BMI_').str
-    data['BMI'] = data.tmp
-    return sort_data(data.drop(columns='tmp'))
+def get_transition_count_measure_data(data, measure):
+    # Oops, edge case.
+    data = data.drop(columns=[c for c in data.columns if 'event_count' in c and '2041' in c])
+    data = get_measure_data(data, measure)
+    return sort_data(data)

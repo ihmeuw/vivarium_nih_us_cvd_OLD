@@ -1,7 +1,8 @@
 import itertools
 
+import pandas as pd
+
 from vivarium_nih_us_cvd.constants import models
-from vivarium_nih_us_cvd.constants.data_keys import MI, ISCHEMIC_STROKE
 
 #################################
 # Results columns and variables #
@@ -32,13 +33,14 @@ YLDS_COLUMN_TEMPLATE = 'ylds_due_to_{CAUSE_OF_DISABILITY}_in_{YEAR}_among_{SEX}_
 STATE_PERSON_TIME_COLUMN_TEMPLATE = '{STATE}_person_time_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}_SBP_{SBP_HEALTH_STATE}_LDL_{LDL_HEALTH_STATE}_FPG_{FPG_STATE}_BMI_{BMI_STATE}'
 TRANSITION_COUNT_COLUMN_TEMPLATE = '{TRANSITION}_event_count_in_{YEAR}_among_{SEX}_in_age_group_{AGE_GROUP}_SBP_{SBP_HEALTH_STATE}_LDL_{LDL_HEALTH_STATE}_FPG_{FPG_STATE}_BMI_{BMI_STATE}'
 
+
 COLUMN_TEMPLATES = {
     'population': TOTAL_POPULATION_COLUMN_TEMPLATE,
     'person_time': PERSON_TIME_COLUMN_TEMPLATE,
     'deaths': DEATH_COLUMN_TEMPLATE,
     'ylls': YLLS_COLUMN_TEMPLATE,
     'ylds': YLDS_COLUMN_TEMPLATE,
-    '_person_time': STATE_PERSON_TIME_COLUMN_TEMPLATE,
+    'state_person_time': STATE_PERSON_TIME_COLUMN_TEMPLATE,
     'transition_count': TRANSITION_COUNT_COLUMN_TEMPLATE,
 }
 
@@ -46,9 +48,9 @@ NON_COUNT_TEMPLATES = [
 ]
 
 POP_STATES = ('living', 'dead', 'tracked', 'untracked')
+SEXES = ('male', 'female')
 HEALTH_STATES = ('high', 'normal')
 ACS_STATES = ('post', 'none')
-SEXES = ('male', 'female')
 YEARS = tuple(range(2021, 2041))
 AGE_GROUPS = (
     '25_to_29',
@@ -112,3 +114,18 @@ def RESULT_COLUMNS(kind='all'):
             columns.append(template.format(**{field: value for field, value in zip(fields, value_group)}))
     return columns
 
+
+def RESULTS_MAP(kind):
+    if kind not in COLUMN_TEMPLATES:
+        raise ValueError(f'Unknown result column type {kind}')
+    columns = []
+    template = COLUMN_TEMPLATES[kind]
+    filtered_field_map = {field: values
+                          for field, values in TEMPLATE_FIELD_MAP.items() if f'{{{field}}}' in template}
+    fields, value_groups = list(filtered_field_map.keys()), list(itertools.product(*filtered_field_map.values()))
+    for value_group in value_groups:
+        columns.append(template.format(**{field: value for field, value in zip(fields, value_group)}))
+    df = pd.DataFrame(value_groups, columns=map(lambda x: x.lower(), fields))
+    df['key'] = columns
+    df['measure'] = kind  # per researcher feedback, this column is useful, even when it's identical for all rows
+    return df.set_index('key').sort_index()
