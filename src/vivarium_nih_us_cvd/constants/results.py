@@ -51,7 +51,7 @@ POP_STATES = ('living', 'dead', 'tracked', 'untracked')
 SEXES = ('male', 'female')
 HEALTH_STATES = ('high', 'normal')
 ACS_STATES = ('post', 'none')
-YEARS = tuple(range(2021, 2041))
+YEARS = ('2021',)
 AGE_GROUPS = (
     '25_to_29',
     '30_to_34',
